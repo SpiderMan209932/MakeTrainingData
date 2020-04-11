@@ -175,7 +175,8 @@ class Ui_MainWindow(object):
         # img = cv2.imread(self.image_file_name[0])
         # cv2.imshow("image", img)
         pixmap = QtGui.QPixmap(self.image_file_name[0])
-        self.Image = QtGui.QImage(self.image_file_name[0])
+        self.Image = QtGui.QImage(img)
+        # self.Image = QtGui.QImage(self.image_file_name[0])
         self.ImageView.setPixmap(QtGui.QPixmap.fromImage(self.Image))
         # file_numberの取得
         self.file_number = int(os.path.splitext(os.path.basename(self.image_file_name[0]))[0])
