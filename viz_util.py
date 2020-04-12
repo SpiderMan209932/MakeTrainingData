@@ -8,6 +8,7 @@ Ref: https://github.com/hengck23/didi-udacity-2017/blob/master/baseline-04/kitti
 
 import numpy as np
 import mayavi.mlab as mlab
+import cv2
 
 try:
     raw_input          # Python 2
@@ -15,11 +16,21 @@ except NameError:
     raw_input = input  # Python 3
 
 
-def draw_frustum(pts_2d, calib):
-    uv_depth = np.ones_like(pts_2d)
-    uv_depth[:, 0:2] = pts_2d[:, 0:2]
-    frustum = calib.project_image_to_velo(uv_depth)
-    return frustum
+def draw_frustum_pc(pc, pts_2d, calib, fig):    
+    pc2d = calib.project_velo_to_image(pc[:, :3])
+    box2d_inds = (pc2d[:, 0] < pts_2d[2]) &\
+        (pc2d[:, 0] > pts_2d[0]) &\
+            (pc2d[:, 1] < pts_2d[3]) &\
+                (pc2d[:, 1] > pts_2d[1])
+    pc_in_box2d = pc[box2d_inds, :]
+    mlab.points3d(pc_in_box2d[:,0], pc_in_box2d[:,1], pc_in_box2d[:,2], color=(1, 1, 1), mode='point', scale_factor=1, figure=fig)
+    return fig
+
+def draw_box2d(img, pts_box2d):
+    cv2.rectangle(img, (int(pts_box2d[0]), int(pts_box2d[1])), (int(pts_box2d[2]), int(pts_box2d[3])), (0, 0, 255), thickness=2)
+    # cv2.rectangle(img, (pts_box2d[0], pts_box2d[1]), (pts_box2d[2], pts_box2d[3]), (0, 0, 255), thickness=2)
+    cv2.imshow("image", img)
+    return True
 
 def draw_lidar_simple(pc, color=None):
     ''' Draw lidar points. simplest set up. '''
