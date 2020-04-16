@@ -16,7 +16,7 @@ import os
 import cv2
 import mayavi.mlab as mlab
 import numpy as np
-from viz_util import draw_lidar, draw_frustum_pc, draw_box2d
+from viz_util import draw_lidar, draw_frustum_pc, draw_box2d, draw_gt_boxes3d
 import trans_util
 from file_util import *
 
@@ -26,7 +26,18 @@ class Ui_MainWindow(object):
         self.FileOp = None
         self.fig = mlab.figure(figure=None, bgcolor=(0,0,0), fgcolor=None, engine=None, size=(1000, 1000))
         self.max_frustum_number = 0
-
+        self.h = 0
+        self.w = 0
+        self.l = 0
+        self.x = 0
+        self.y = 0
+        self.z = 0
+        self.yaw = 0
+        self.xmin = 0
+        self.ymin = 0
+        self.xmax = 0
+        self.ymax = 0
+        
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(272, 700)
@@ -83,6 +94,7 @@ class Ui_MainWindow(object):
         self.SizeHeight = QtWidgets.QDoubleSpinBox(self.centralwidget)
         self.SizeHeight.setGeometry(QtCore.QRect(51, 20, 211, 31))
         self.SizeHeight.setObjectName("SizeHeight")
+        self.SizeHeight.valueChanged.connect(self.GetValue)
         self.SizeWidth = QtWidgets.QDoubleSpinBox(self.centralwidget)
         self.SizeWidth.setGeometry(QtCore.QRect(51, 50, 211, 31))
         self.SizeWidth.setObjectName("SizeWidth")
@@ -295,7 +307,18 @@ class Ui_MainWindow(object):
         self.ShowPointCloud(img, pts_box2d)
         return True
 
-
+    def GetValue(self):
+        self.h = self.SizeHeight.value()
+        self.w = self.SizeWidth.value()
+        self.l = self.SizeLength.value()
+        self.x = self.PositionX.value()
+        self.y = self.PositionY.value()
+        self.z = self.PositionZ.value()
+        self.yaw = self.AngleYaw.value()
+        self.xmin = self.Box2DXMin.value()
+        self.ymin = self.Box2DYMin.value()
+        self.xmax = self.Box2DXMax.value()
+        self.ymax = self.Box2DYMax.value()
 
 
 if __name__ == "__main__":
