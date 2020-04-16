@@ -27,6 +27,7 @@ class Ui_MainWindow(object):
         self.fig = mlab.figure(figure=None, bgcolor=(0,0,0), fgcolor=None, engine=None, size=(1000, 1000))
         self.max_frustum_number = 0
         self.objects = None
+        self.type = None
         self.h = 0
         self.w = 0
         self.l = 0
@@ -91,55 +92,95 @@ class Ui_MainWindow(object):
         self.TextBox2DYMax.setAlignment(QtCore.Qt.AlignCenter)
         self.TextBox2DYMax.setObjectName("TextBox2DYMax")
 
-        # サイズ
+        # H
         self.SizeHeight = QtWidgets.QDoubleSpinBox(self.centralwidget)
+        self.SizeHeight.setMaximum(1000)
+        self.SizeHeight.setMinimum(-1000)
         self.SizeHeight.setGeometry(QtCore.QRect(51, 20, 211, 31))
         self.SizeHeight.setObjectName("SizeHeight")
         self.SizeHeight.valueChanged.connect(self.GetValue)
+        # W       
         self.SizeWidth = QtWidgets.QDoubleSpinBox(self.centralwidget)
+        self.SizeWidth.setMaximum(1000)
+        self.SizeWidth.setMinimum(-1000)
         self.SizeWidth.setGeometry(QtCore.QRect(51, 50, 211, 31))
         self.SizeWidth.setObjectName("SizeWidth")
+        self.SizeWidth.valueChanged.connect(self.GetValue)
+        # L
         self.SizeLength = QtWidgets.QDoubleSpinBox(self.centralwidget)
+        self.SizeLength.setMaximum(1000)
+        self.SizeLength.setMinimum(-1000)
         self.SizeLength.setGeometry(QtCore.QRect(51, 80, 211, 31))
         self.SizeLength.setObjectName("SizeLength")
-        # 位置
+        self.SizeLength.valueChanged.connect(self.GetValue)
+        # X
         self.PositionX = QtWidgets.QDoubleSpinBox(self.centralwidget)
+        self.PositionX.setMaximum(1000)
+        self.PositionX.setMinimum(-1000)
         self.PositionX.setGeometry(QtCore.QRect(51, 110, 211, 31))
         self.PositionX.setObjectName("PositionX")
+        self.PositionX.valueChanged.connect(self.GetValue)
+        # Y
         self.PositionY = QtWidgets.QDoubleSpinBox(self.centralwidget)
+        self.PositionY.setMaximum(1000)
+        self.PositionY.setMinimum(-1000)
         self.PositionY.setGeometry(QtCore.QRect(51, 140, 211, 31))
         self.PositionY.setObjectName("PositionY")
+        self.PositionY.valueChanged.connect(self.GetValue)
+        #Z
         self.PositionZ = QtWidgets.QDoubleSpinBox(self.centralwidget)
+        self.PositionZ.setMaximum(1000)
+        self.PositionZ.setMinimum(-1000)
         self.PositionZ.setGeometry(QtCore.QRect(51, 170, 211, 31))
         self.PositionZ.setObjectName("PositionZ")
-        # 向き
+        self.PositionZ.valueChanged.connect(self.GetValue)
+        # Yaw
         self.AngleYaw = QtWidgets.QDoubleSpinBox(self.centralwidget)
+        self.AngleYaw.setMaximum(np.pi)
+        self.AngleYaw.setMinimum(-np.pi)
         self.AngleYaw.setGeometry(QtCore.QRect(51, 200, 211, 31))
         self.AngleYaw.setObjectName("AngleYaw")
-        #2dBox
+        self.AngleYaw.valueChanged.connect(self.GetValue)
+        # XMin
         self.Box2DXMin = QtWidgets.QDoubleSpinBox(self.centralwidget)
+        self.Box2DXMin.setMaximum(2000)
+        self.Box2DXMin.setMinimum(0)
         self.Box2DXMin.setGeometry(QtCore.QRect(51, 230, 211, 31))
         self.Box2DXMin.setObjectName("Box2DXMin")
-        self.Box2DXMax = QtWidgets.QDoubleSpinBox(self.centralwidget)
-        self.Box2DXMax.setGeometry(QtCore.QRect(51, 260, 211, 31))
-        self.Box2DXMax.setObjectName("Box2DXMax")
+        self.Box2DXMin.valueChanged.connect(self.GetValue)
+        # YMin
         self.Box2DYMin = QtWidgets.QDoubleSpinBox(self.centralwidget)
+        self.Box2DYMin.setMaximum(2000)
+        self.Box2DYMin.setMinimum(0)
         self.Box2DYMin.setGeometry(QtCore.QRect(51, 290, 211, 31))
         self.Box2DYMin.setObjectName("Box2DYMin")
+        self.Box2DYMin.valueChanged.connect(self.GetValue)
+        # XMax
+        self.Box2DXMax = QtWidgets.QDoubleSpinBox(self.centralwidget)
+        self.Box2DXMax.setMaximum(2000)
+        self.Box2DXMax.setMinimum(0)
+        self.Box2DXMax.setGeometry(QtCore.QRect(51, 260, 211, 31))
+        self.Box2DXMax.setObjectName("Box2DXMax")
+        self.Box2DXMax.valueChanged.connect(self.GetValue)
+        # YMax
         self.Box2DYMax = QtWidgets.QDoubleSpinBox(self.centralwidget)
+        self.Box2DYMax.setMaximum(2000)
+        self.Box2DYMax.setMinimum(0)
         self.Box2DYMax.setGeometry(QtCore.QRect(51, 320, 211, 31))
         self.Box2DYMax.setObjectName("Box2DYMax")
+        self.Box2DYMax.valueChanged.connect(self.GetValue)
        
         # クラス
-        self.ObjecClass = QtWidgets.QComboBox(self.centralwidget)
-        self.ObjecClass.setGeometry(QtCore.QRect(10, 350, 252, 31))
-        self.ObjecClass.setObjectName("ObjecClass")
-        self.ObjecClass.addItem("")
-        self.ObjecClass.addItem("")
-        self.ObjecClass.addItem("")
-        self.ObjecClass.addItem("")
-        self.ObjecClass.addItem("")
-        self.ObjecClass.addItem("")
+        self.ObjectClass = QtWidgets.QComboBox(self.centralwidget)
+        self.ObjectClass.setGeometry(QtCore.QRect(10, 350, 252, 31))
+        self.ObjectClass.setObjectName("ObjectClass")
+        self.ObjectClass.addItem("")
+        self.ObjectClass.addItem("")
+        self.ObjectClass.addItem("")
+        self.ObjectClass.addItem("")
+        self.ObjectClass.addItem("")
+        self.ObjectClass.addItem("")
+        self.ObjectClass.currentTextChanged.connect(self.GetValue)
 
         # ボタン
         self.BeforeFrame = QtWidgets.QPushButton(self.centralwidget)
@@ -200,12 +241,12 @@ class Ui_MainWindow(object):
         self.TextBox2DXMax.setText(_translate("MainWindow", "Xmax"))
         self.TextBox2DYMin.setText(_translate("MainWindow", "Ymin"))
         self.TextBox2DYMax.setText(_translate("MainWindow", "Ymax"))
-        self.ObjecClass.setItemText(0, _translate("MainWindow", "Class"))
-        self.ObjecClass.setItemText(1, _translate("MainWindow", "Car"))
-        self.ObjecClass.setItemText(2, _translate("MainWindow", "Pedestrian"))
-        self.ObjecClass.setItemText(3, _translate("MainWindow", "Cyclist"))
-        self.ObjecClass.setItemText(4, _translate("MainWindow", "Truck"))
-        self.ObjecClass.setItemText(5, _translate("MainWindow", "Bus"))
+        self.ObjectClass.setItemText(0, _translate("MainWindow", "Class"))
+        self.ObjectClass.setItemText(1, _translate("MainWindow", "Car"))
+        self.ObjectClass.setItemText(2, _translate("MainWindow", "Pedestrian"))
+        self.ObjectClass.setItemText(3, _translate("MainWindow", "Cyclist"))
+        self.ObjectClass.setItemText(4, _translate("MainWindow", "Truck"))
+        self.ObjectClass.setItemText(5, _translate("MainWindow", "Van"))
         self.NextFrame.setText(_translate("MainWindow", "|▶"))
         self.BeforeFrame.setText(_translate("MainWindow", "◀|"))
         self.Before2DBox.setText(_translate("MainWindow", "◁|"))
@@ -226,10 +267,11 @@ class Ui_MainWindow(object):
         self.frustum_number = 0
         # objestの作成
         self.objects = self.FileOp.read_label_file()
+        self.InputValue()
          # 画像の表示
         img , pts_box2d= self.ShowImage()
         # ポイントクラウドの表示
-        self.ShowPointCloud(img, pts_box2d, self.obj)
+        self.ShowPointCloud(img, pts_box2d)
         return True
         
     def ShowPointCloud(self, img, pts_box2d):
@@ -249,7 +291,7 @@ class Ui_MainWindow(object):
         # 画像ファイルの読み込み
         img = self.FileOp.read_image_file()
         # 2DBoxの読み込み
-        pts_box2d, self.max_frustum_number = self.FileOp.read_label2d_file(frustum_number=self.frustum_number)
+        pts_box2d, self.max_frustum_number = self.FileOp.read_label2d_file(frustum_number=self.frustum_number,objects=self.objects)
         # 画像 + 2DBox
         draw_box2d(img, pts_box2d)
         return img, pts_box2d
@@ -266,6 +308,9 @@ class Ui_MainWindow(object):
         self.FileOp = self.FileOp.update(1)
         # frustum_numberの初期化
         self.frustum_number = 0
+         # objestの作成
+        self.objects = self.FileOp.read_label_file()
+        self.InputValue()
         # 画像の表示
         img, pts_box2d = self.ShowImage()
         # ポイントクラウドの表示
@@ -277,6 +322,9 @@ class Ui_MainWindow(object):
         self.FileOp = self.FileOp.update(-1)
         # frustum_numberの初期化
         self.frustum_number = 0
+         # objestの作成
+        self.objects = self.FileOp.read_label_file()
+        self.InputValue()
         # 画像の表示
         img, pts_box2d = self.ShowImage()
         # ポイントクラウドの表示
@@ -311,6 +359,7 @@ class Ui_MainWindow(object):
         return True
 
     def GetValue(self):
+        self.type = self.ObjectClass.currentText()
         self.h = self.SizeHeight.value()
         self.w = self.SizeWidth.value()
         self.l = self.SizeLength.value()
@@ -322,6 +371,61 @@ class Ui_MainWindow(object):
         self.ymin = self.Box2DYMin.value()
         self.xmax = self.Box2DXMax.value()
         self.ymax = self.Box2DYMax.value()
+        return True
+
+    def InputValue(self):
+        # シグナルの無効化
+        self.ObjectClass.blockSignals(True)
+        self.SizeHeight.blockSignals(True)
+        self.SizeWidth.blockSignals(True)
+        self.SizeLength.blockSignals(True)
+        self.PositionX.blockSignals(True)
+        self.PositionY.blockSignals(True)
+        self.PositionZ.blockSignals(True)
+        self.AngleYaw.blockSignals(True)
+        self.Box2DXMin.blockSignals(True)
+        self.Box2DYMin.blockSignals(True)
+        self.Box2DXMax.blockSignals(True)
+        self.Box2DYMax.blockSignals(True)
+        # 値の更新
+        obj = self.objects[self.frustum_number]
+        self.type = obj.type
+        self.h = obj.h
+        self.w = obj.w
+        self.l = obj.l
+        self.x = obj.t[0]
+        self.y = obj.t[1]
+        self.z = obj.t[2]
+        self.yaw = obj.ry
+        self.xmin = obj.xmin
+        self.ymin = obj.ymin
+        self.xmax = obj.xmax
+        self.ymax = obj.ymax
+        self.ObjectClass.setCurrentText(self.type)
+        self.SizeHeight.setValue(self.h)
+        self.SizeWidth.setValue(self.w)
+        self.SizeLength.setValue(self.l)
+        self.PositionX.setValue(self.x)
+        self.PositionY.setValue(self.y)
+        self.PositionZ.setValue(self.z)
+        self.AngleYaw.setValue(self.yaw)
+        self.Box2DXMin.setValue(self.xmin)
+        self.Box2DYMin.setValue(self.ymin)
+        self.Box2DXMax.setValue(self.xmax)
+        self.Box2DYMax.setValue(self.ymax)
+        # シグナルの有効化
+        self.ObjectClass.blockSignals(False)
+        self.SizeHeight.blockSignals(False)
+        self.SizeWidth.blockSignals(False)
+        self.SizeLength.blockSignals(False)
+        self.PositionX.blockSignals(False)
+        self.PositionY.blockSignals(False)
+        self.PositionZ.blockSignals(False)
+        self.AngleYaw.blockSignals(False)
+        self.Box2DXMin.blockSignals(False)
+        self.Box2DYMin.blockSignals(False)
+        self.Box2DXMax.blockSignals(False)
+        self.Box2DYMax.blockSignals(False)
         return True
 
 
