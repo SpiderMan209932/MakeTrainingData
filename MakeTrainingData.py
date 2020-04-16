@@ -16,7 +16,7 @@ import os
 import cv2
 import mayavi.mlab as mlab
 import numpy as np
-from viz_util import draw_lidar, draw_frustum_pc, draw_box2d, draw_gt_boxes3d
+from viz_util import draw_lidar, draw_frustum_pc, draw_box2d, draw_gt_boxes3d, draw_box3d_pc
 import trans_util
 from file_util import *
 
@@ -318,10 +318,11 @@ class Ui_MainWindow(object):
         calib = self.FileOp.calib
         # 3Dボックスの頂点の取得
         _, pts_box3d = trans_util.compute_box_3d(self.objects[self.frustum_number] , calib.P, self.box3d)
-        # ポイントクラウド + フラスタム
+        # ポイントクラウド + フラスタム + ボックス
         draw_lidar(pc_in_image, fig=self.fig)
         draw_gt_boxes3d([pts_box3d],obj_type=self.type, color=ObjectColor(self.type, mode="3d"), fig=self.fig)
         draw_frustum_pc(pc_in_image, pts_box2d, calib=calib, fig=self.fig)
+        draw_box3d_pc(pc_in_image, pts_box3d, color=ObjectColor(self.type, mode="3d"), fig=self.fig)
         return True
     
     def ShowImage(self, update=False):
