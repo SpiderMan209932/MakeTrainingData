@@ -283,7 +283,7 @@ class Ui_MainWindow(object):
         # calibの読み込み
         calib = self.FileOp.calib
         # 3Dボックスの頂点の取得
-        pts_box3d = trans_util.compute_box_3d(self.objects[self.frustum_number] , calib.P)
+        _, pts_box3d = trans_util.compute_box_3d(self.objects[self.frustum_number] , calib.P)
         # ポイントクラウド + フラスタム
         draw_lidar(pc_in_image, fig=self.fig)
         draw_gt_boxes3d([pts_box3d], fig=self.fig)
