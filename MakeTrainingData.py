@@ -7,7 +7,7 @@
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets, QtOpenGL
-from PyQt5.QtWidgets import QFileDialog
+from PyQt5.QtWidgets import QFileDialog, QMessageBox, QPlainTextEdit
 from PyQt5.QtCore    import pyqtSlot
 from OpenGL.GL import *
 from OpenGL.GLU import *
@@ -52,6 +52,7 @@ def ObjectColor(obj_type, mode):
 class Ui_MainWindow(object):
     def __init__(self):
         self.frustum_number = 0
+        self.before_frustum_number = -1
         self.FileOp = None
         self.fig = mlab.figure(figure=None, bgcolor=(0,0,0), fgcolor=None, engine=None, size=(1000, 1000))
         self.max_frustum_number = 0
@@ -74,9 +75,12 @@ class Ui_MainWindow(object):
                     str(self.h) + ' ' + str(self.w) + ' ' + str(self.h) + ' ' + \
                         str(self.x) + ' ' + str(self.y) +  ' ' + str(self.z) + ' ' + \
                             str(self.yaw)
+        self.overwrite = False
+        self.save_log = None
+
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(272, 700)
+        MainWindow.resize(272, 950)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
 
@@ -238,6 +242,11 @@ class Ui_MainWindow(object):
         self.SaveLabel.setObjectName("SaveLabel")
         self.SaveLabel.clicked.connect(self.SaveBoxLabel)
 
+        # log
+        self.SaveLog = QPlainTextEdit(self.centralwidget)
+        self.SaveLog.setGeometry(QtCore.QRect(10, 670, 251, 200))
+        self.SaveLog.setObjectName("SaveLog")
+
         # メニューバー
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
@@ -345,20 +354,46 @@ class Ui_MainWindow(object):
                             str(self.yaw)
         return True
 
+    def MakeSaveLog(self):
+        self.save_log = str(os.path.basename(self.FileOp.new_label_file_name)) + '\nfrustum_number : ' + \
+            str(self.frustum_number) + '\nClass : ' + str(self.type)
+        return self.save_log
+
     def SaveBoxLabel(self):
         # new_labelディレクトリの生成
         self.FileOp.make_save_dir()
         # save_labelの作成
         self.MakeSaveLabel()
+        # frustum_numberが一致したら保存しない
+        if self.before_frustum_number==self.frustum_number:
+            _dialog =  QMessageBox.information(None, "Caution", "すでに保存されています", QMessageBox.Ok)
+            return True
+        # frustum_numberが減少したら注意
+        elif self.before_frustum_number>self.frustum_number:
+            _dialog =  QMessageBox.information(None, "Caution", "すでに確認した物体です\n保存しますか?", QMessageBox.No, QMessageBox.Yes)
+            if _dialog==QMessageBox.No:
+                return True
         # new_labelへlabelを保存
-        self.FileOp.write_save_label(self.save_label)
+        if self.FileOp.write_save_label(self.save_label, self.overwrite)==False:
+            save_dialog = QMessageBox.information(None, "Caution", ("すでにファイルが存在します\n" + "上書きしますか?"), QMessageBox.No, QMessageBox.Yes)
+            if save_dialog == QMessageBox.Yes:
+                self.overwrite = True
+                self.FileOp.write_save_label(self.save_label, self.overwrite, delete=True)               
+                self.SaveLog.appendPlainText(self.MakeSaveLog())
+                self.before_frustum_number = self.frustum_number
+        else:
+            self.SaveLog.appendPlainText(self.MakeSaveLog())
+            self.before_frustum_number = self.frustum_number
         return True
 
     def OpenNextFrame(self):
+        # overwriteの初期化
+        self.overwrite = False
         # FileOperationの更新
         self.FileOp = self.FileOp.update(1)
         # frustum_numberの初期化
         self.frustum_number = 0
+        self.before_frustum_number = -1
          # objestの作成
         self.objects = self.FileOp.read_label_file()
         self.InputValue()
@@ -369,11 +404,14 @@ class Ui_MainWindow(object):
         return True
         
     def OpenBeforeFrame(self):
+        # overwriteの初期化
+        self.overwrite = False
         # FileOperationの更新
         self.FileOp = self.FileOp.update(-1)
         # frustum_numberの初期化
         self.frustum_number = 0
-         # objestの作成
+        self.before_frustum_number = -1
+        # objestの作成
         self.objects = self.FileOp.read_label_file()
         self.InputValue()
         # 画像の表示
@@ -389,6 +427,8 @@ class Ui_MainWindow(object):
         if self.frustum_number >= self.max_frustum_number:
             self.frustum_number -= 1
             return True
+        # frustumの更新
+        self.InputValue()
         # 画像の表示
         img, pts_box2d = self.ShowImage()
         # ポイントクラウドの表示
@@ -403,6 +443,8 @@ class Ui_MainWindow(object):
             print('0')
             self.frustum_number = 0
             return True
+        # frustumの更新
+        self.InputValue()
         # 画像の表示
         img, pts_box2d = self.ShowImage()
         # ポイントクラウドの表示
