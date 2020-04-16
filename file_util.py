@@ -41,33 +41,39 @@ class FileOperation(object):
         self.data_dir_name          = os.path.dirname(self.image_dir_name)
         self.pointcloud_dir_name    = os.path.join(self.data_dir_name, 'PointCloud')
         self.label2d_dir_name       = os.path.join(self.data_dir_name, 'label2d')
+        self.label_dir_name         = os.path.join(self.data_dir_name, 'label')
         self.calib_dir_name         = os.path.join(self.data_dir_name, 'calib')
         # 各ファイル名の取得
         self.base_file_name         = os.path.splitext(os.path.basename(self.image_file_name))[0]
         self.base_file_number       = int(self.base_file_name)
         self.pointcloud_file_name   = os.path.join(self.pointcloud_dir_name, self.base_file_name+ '.bin')
         self.label2d_file_name      = os.path.join(self.label2d_dir_name, self.base_file_name+'.txt')
+        self.label_file_name        = os.path.join(self.label_dir_name, self.base_file_name+'.txt')
         self.calib_file_name        = os.path.join(self.calib_dir_name, self.base_file_name+'.txt')
         self.calib                  = trans_util.Calibration(self.calib_file_name)
-        self.new_label_file_name    = os.path.join(self.data_dir_name, 'new_label', self.base_file_name+'.txt')
+        self.new_label_dir_name     = os.path.join(self.data_dir_name, 'new_label')
+        self.new_label_file_name    = os.path.join(self.new_label_dir_name, self.base_file_name+'.txt')
 
     def read_image_file(self):
         img = cv2.imread(self.image_file_name)
         return img
     
     def read_label_file(self):
-        if os.path.exist(self.labal_file_name)==False:
+        if os.path.exists(self.label_file_name)==False:
             return False
-        lines = [line.rstrip() for line in open(self.label2d_file_name)]
-        datas  = [line.split() for line in lines]
-        objects = [LabelObject(data) for data in datas]
+        lines = [line.rstrip() for line in open(self.label_file_name)]
+        objects = [LabelObject(data) for data in lines]
         return objects
 
-    def read_label2d_file(self, frustum_number):
-        lines           = [line.rstrip() for line in open(self.label2d_file_name)]
-        list_pts_box2d  = [line.split() for line in lines]
-        num             = len(list_pts_box2d)
-        pts_box2d       = [float(pts) for pts in list_pts_box2d[frustum_number]]
+    def read_label2d_file(self, frustum_number, objects):
+        if objects[frustum_number].box2d[0]!=-100:
+            num = len(objects)
+            pts_box2d = objects[frustum_number].box2d
+        else:
+            lines           = [line.rstrip() for line in open(self.label2d_file_name)]
+            list_pts_box2d  = [line.split() for line in lines]
+            num             = len(list_pts_box2d)
+            pts_box2d       = [float(pts) for pts in list_pts_box2d[frustum_number]]
         return pts_box2d, num
     
     def read_pc_file(self):
@@ -94,19 +100,13 @@ class FileOperation(object):
         return pts_box2d_frustum
 
     def make_save_dir(self):
-        if os.path.exists(self.new_label_file_name)==False:
-            os.mkdir(self.new_label_file_name)        
+        if os.path.exists(self.new_label_dir_name)==False:
+            os.mkdir(self.new_label_dir_name)        
         return True
     
     def write_save_label(self, labels):
         with open(self.new_label_file_name, "a") as f:
-            for label in labels:
-                if label.isdigit()==False:
-                    f.write('%s '%label)
-                else :
-                    f.write('%.6f '%label)
-                    if label==labels[15]:
-                        f.write('\n')
+            f.write('%s\n'%labels)
         return True
     
 
