@@ -104,11 +104,14 @@ class FileOperation(object):
             os.mkdir(self.new_label_dir_name)        
         return True
     
-    def write_save_label(self, labels):
+    def write_save_label(self, labels, overwrite=False, delete=False):
+        if (os.path.exists(self.new_label_file_name)==True) and (overwrite==False):
+            return False
+        if delete==True:
+            os.remove(self.new_label_file_name)
         with open(self.new_label_file_name, "a") as f:
             f.write('%s\n'%labels)
         return True
-    
 
     def update(self, num):
         # base_numberの追加
