@@ -16,6 +16,17 @@ except NameError:
     raw_input = input  # Python 3
 
 
+def in_hull(p, hull):
+    from scipy.spatial import Delaunay
+    if not isinstance(hull,Delaunay):
+        hull = Delaunay(hull)
+    return hull.find_simplex(p)>=0
+
+def extract_pc_in_box3d(pc, box3d):
+    ''' pc: (N,3), box3d: (8,3) '''
+    box3d_roi_inds = in_hull(pc[:,0:3], box3d)
+    return pc[box3d_roi_inds,:], box3d_roi_inds
+
 def draw_frustum_pc(pc, pts_2d, calib, fig):    
     pc2d = calib.project_velo_to_image(pc[:, :3])
     box2d_inds = (pc2d[:, 0] < pts_2d[2]) &\
@@ -26,11 +37,16 @@ def draw_frustum_pc(pc, pts_2d, calib, fig):
     mlab.points3d(pc_in_box2d[:,0], pc_in_box2d[:,1], pc_in_box2d[:,2], color=(1, 1, 1), mode='point', scale_factor=1, figure=fig)
     return fig
 
-def draw_box2d(img, pts_box2d):
-    cv2.rectangle(img, (int(pts_box2d[0]), int(pts_box2d[1])), (int(pts_box2d[2]), int(pts_box2d[3])), (0, 0, 255), thickness=2)
+def draw_box2d(img, pts_box2d, color):
+    cv2.rectangle(img, (int(pts_box2d[0]), int(pts_box2d[1])), (int(pts_box2d[2]), int(pts_box2d[3])), color, thickness=2)
     # cv2.rectangle(img, (pts_box2d[0], pts_box2d[1]), (pts_box2d[2], pts_box2d[3]), (0, 0, 255), thickness=2)
     cv2.imshow("image", img)
     return True
+
+def draw_box3d_pc(pc, pts_3d, color, fig):
+    pc_in_box3d, _ = extract_pc_in_box3d(pc, pts_3d)
+    mlab.points3d(pc_in_box3d[:,0], pc_in_box3d[:,1], pc_in_box3d[:,2], color=color, mode='point', scale_factor=1, figure=fig)
+    return fig
 
 def draw_lidar_simple(pc, color=None):
     ''' Draw lidar points. simplest set up. '''
@@ -108,7 +124,7 @@ def draw_lidar(pc, color=None, fig=None, bgcolor=(0,0,0), pts_scale=1, pts_mode=
     mlab.view(azimuth=180, elevation=70, focalpoint=[ 12.0909996 , -1.04700089, -2.03249991], distance=62.0, figure=fig)
     return fig
 
-def draw_gt_boxes3d(gt_boxes3d, fig, color=(1,1,1), line_width=1, draw_text=True, text_scale=(1,1,1), color_list=None):
+def draw_gt_boxes3d(gt_boxes3d, fig, obj_type, color=(1,1,1), line_width=1, draw_text=True, text_scale=(1,1,1), color_list=None):
     ''' Draw 3D bounding boxes
     Args:
         gt_boxes3d: numpy array (n,8,3) for XYZs of the box corners
@@ -126,7 +142,8 @@ def draw_gt_boxes3d(gt_boxes3d, fig, color=(1,1,1), line_width=1, draw_text=True
         b = gt_boxes3d[n]
         if color_list is not None:
             color = color_list[n] 
-        if draw_text: mlab.text3d(b[4,0], b[4,1], b[4,2], '%d'%n, scale=text_scale, color=color, figure=fig)
+        mlab.text3d(b[4,0], b[4,1], b[4,2], '%s'%obj_type, scale=text_scale, color=color, figure=fig)
+        # if draw_text: mlab.text3d(b[4,0], b[4,1], b[4,2], '%d'%n, scale=text_scale, color=color, figure=fig)
         for k in range(0,4):
             #http://docs.enthought.com/mayavi/mayavi/auto/mlab_helper_functions.html
             i,j=k,(k+1)%4
