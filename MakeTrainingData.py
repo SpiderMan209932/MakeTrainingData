@@ -282,16 +282,22 @@ class Ui_MainWindow(object):
         pc_in_image = self.FileOp.get_pc_in_image(pc_velo, img.shape[1], img.shape[0])
         # calibの読み込み
         calib = self.FileOp.calib
+        # 3Dボックスの頂点の取得
+        pts_box3d = trans_util.compute_box_3d(self.objects[self.frustum_number] , calib.P)
         # ポイントクラウド + フラスタム
         draw_lidar(pc_in_image, fig=self.fig)
+        draw_gt_boxes3d([pts_box3d], fig=self.fig)
         draw_frustum_pc(pc_in_image, pts_box2d, calib=calib, fig=self.fig)
         return True
     
-    def ShowImage(self):
+    def ShowImage(self, update=False):
         # 画像ファイルの読み込み
         img = self.FileOp.read_image_file()
         # 2DBoxの読み込み
         pts_box2d, self.max_frustum_number = self.FileOp.read_label2d_file(frustum_number=self.frustum_number,objects=self.objects)
+        # 2DBoxの更新
+        if update:
+            pts_box2d = [self.xmin, self.ymin, self.xmax, self.ymax]
         # 画像 + 2DBox
         draw_box2d(img, pts_box2d)
         return img, pts_box2d
