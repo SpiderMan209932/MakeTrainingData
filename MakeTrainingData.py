@@ -69,7 +69,11 @@ class Ui_MainWindow(object):
         self.ymin = 0
         self.xmax = 0
         self.ymax = 0
-        
+        self.save_label = str(self.type) + ' ' + '-1 -10 -10 ' + \
+                str(self.xmin) + ' ' + str(self.ymin) + ' ' + str(self.xmax) + ' ' + str(self.ymax) + ' ' + \
+                    str(self.h) + ' ' + str(self.w) + ' ' + str(self.h) + ' ' + \
+                        str(self.x) + ' ' + str(self.y) +  ' ' + str(self.z) + ' ' + \
+                            str(self.yaw)
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(272, 700)
@@ -332,11 +336,21 @@ class Ui_MainWindow(object):
         draw_box2d(img, pts_box2d, ObjectColor(self.type, mode="2d"))
         return img, pts_box2d
     
+    def MakeSaveLabel(self):
+        self.save_label = str(self.type) + ' ' + '-1 -10 -10 ' + \
+                str(self.xmin) + ' ' + str(self.ymin) + ' ' + str(self.xmax) + ' ' + str(self.ymax) + ' ' + \
+                    str(self.h) + ' ' + str(self.w) + ' ' + str(self.h) + ' ' + \
+                        str(self.x) + ' ' + str(self.y) +  ' ' + str(self.z) + ' ' + \
+                            str(self.yaw)
+        return True
+
     def SaveBoxLabel(self):
         # new_labelディレクトリの生成
         self.FileOp.make_save_dir()
+        # save_labelの作成
+        self.MakeSaveLabel()
         # new_labelへlabelを保存
-        self.FileOp.write_save_label()
+        self.FileOp.write_save_label(self.save_label)
         return True
 
     def OpenNextFrame(self):
@@ -395,8 +409,10 @@ class Ui_MainWindow(object):
         return True
 
     def GetValue(self):
+        # 初期値では行わない
         if self.ObjectClass.currentText()=="Class":
             return True
+        # 値の取得
         self.type = self.ObjectClass.currentText()
         self.h = self.SizeHeight.value()
         self.w = self.SizeWidth.value()
