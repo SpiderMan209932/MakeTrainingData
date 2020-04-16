@@ -26,6 +26,7 @@ class Ui_MainWindow(object):
         self.FileOp = None
         self.fig = mlab.figure(figure=None, bgcolor=(0,0,0), fgcolor=None, engine=None, size=(1000, 1000))
         self.max_frustum_number = 0
+        self.objects = None
         self.h = 0
         self.w = 0
         self.l = 0
@@ -223,10 +224,12 @@ class Ui_MainWindow(object):
         self.FileOp = FileOperation(image_file_name[0])
         # frustum_numberの初期化
         self.frustum_number = 0
+        # objestの作成
+        self.objects = self.FileOp.read_label_file()
          # 画像の表示
         img , pts_box2d= self.ShowImage()
         # ポイントクラウドの表示
-        self.ShowPointCloud(img, pts_box2d)
+        self.ShowPointCloud(img, pts_box2d, self.obj)
         return True
         
     def ShowPointCloud(self, img, pts_box2d):
@@ -319,6 +322,7 @@ class Ui_MainWindow(object):
         self.ymin = self.Box2DYMin.value()
         self.xmax = self.Box2DXMax.value()
         self.ymax = self.Box2DYMax.value()
+        return True
 
 
 if __name__ == "__main__":
