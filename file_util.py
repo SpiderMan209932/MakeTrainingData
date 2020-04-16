@@ -6,6 +6,31 @@ import numpy as np
 import cv2
 import trans_util
 
+class LabelObject(object):
+    def __init__(self, label_file_line):
+        data = label_file_line.split(' ')
+        data[1:] = [float(x) for x in data[1:]]
+
+        # extract label, truncation, occlusion
+        self.type = data[0] # 'Car', 'Pedestrian', ...
+        self.truncation = data[1] # truncated pixel ratio [0..1]
+        self.occlusion = int(data[2]) # 0=visible, 1=partly occluded, 2=fully occluded, 3=unknown
+        self.alpha = data[3] # object observation angle [-pi..pi]
+
+        # extract 2d bounding box in 0-based coordinates
+        self.xmin = data[4] # left
+        self.ymin = data[5] # top
+        self.xmax = data[6] # right
+        self.ymax = data[7] # bottom
+        self.box2d = np.array([self.xmin,self.ymin,self.xmax,self.ymax])
+
+        # extract 3d bounding box information
+        self.h = data[8] # box height
+        self.w = data[9] # box width
+        self.l = data[10] # box length (in meters)
+        self.t = (data[11],data[12],data[13]) # location (x,y,z) in camera coord.
+        self.ry = data[14] # yaw angle (around Y-axis in camera coordinates) [-pi..pi]
+
 class FileOperation(object):
     def __init__(self, image_file_name):
         self.image_file_name        = image_file_name
@@ -35,12 +60,7 @@ class FileOperation(object):
             return False
         lines = [line.rstrip() for line in open(self.label2d_file_name)]
         datas  = [line.split() for line in lines]
-        objects = [0 for _ in range(datas)]
-        for loop in range(len(datas)):
-            data = datas[loop].split(' ')
-            data  = [float(x) for x in data[1:]]
-            objects[loop] = { 'type':data[0], 'box2d':(data[4] ,data[5], data[6], data[7]), 'center':(data[11], data[12], data[13]),
-            'size':(data[8], data[9], data[10]), 'yaw':(data[14])}   
+        objects = [LabelObject(data) for data in datas]
         return objects
 
     def read_label2d_file(self, frustum_number):
