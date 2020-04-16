@@ -27,6 +27,7 @@ class Ui_MainWindow(object):
         self.fig = mlab.figure(figure=None, bgcolor=(0,0,0), fgcolor=None, engine=None, size=(1000, 1000))
         self.max_frustum_number = 0
         self.objects = None
+        self.box3d = None
         self.type = None
         self.h = 0
         self.w = 0
@@ -283,7 +284,7 @@ class Ui_MainWindow(object):
         # calibの読み込み
         calib = self.FileOp.calib
         # 3Dボックスの頂点の取得
-        _, pts_box3d = trans_util.compute_box_3d(self.objects[self.frustum_number] , calib.P)
+        _, pts_box3d = trans_util.compute_box_3d(self.objects[self.frustum_number] , calib.P, self.box3d)
         # ポイントクラウド + フラスタム
         draw_lidar(pc_in_image, fig=self.fig)
         draw_gt_boxes3d([pts_box3d], fig=self.fig)
@@ -365,6 +366,8 @@ class Ui_MainWindow(object):
         return True
 
     def GetValue(self):
+        if self.ObjectClass.currentText()=="Class":
+            return True
         self.type = self.ObjectClass.currentText()
         self.h = self.SizeHeight.value()
         self.w = self.SizeWidth.value()
@@ -377,6 +380,11 @@ class Ui_MainWindow(object):
         self.ymin = self.Box2DYMin.value()
         self.xmax = self.Box2DXMax.value()
         self.ymax = self.Box2DYMax.value()
+        self.box3d = [self.l, self.w, self.h, self.yaw, self.x, self.y, self.z]
+        # 画像の表示
+        img , pts_box2d = self.ShowImage(update=True)
+        # ポイントクラウドの表示
+        self.ShowPointCloud(img , pts_box2d)
         return True
 
     def InputValue(self):
