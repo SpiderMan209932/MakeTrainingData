@@ -386,7 +386,7 @@ class Ui_MainWindow(object):
         # 3Dボックスの頂点の取得
         _, pts_box3d = trans_util.compute_box_3d(self.objects[self.frustum_number] , calib.P, self.box3d)
         self.pc = gl.GLScatterPlotItem(pos=pc_in_image, size=0.1, color=(1, 1, 1, 1))
-        self.ViewPointCloud.pan(100, 0, 0)
+        self.ViewPointCloud.pan(self.viewx, self.viewy, self.viewz)
         self.ViewPointCloud.addItem(self.pc)
         # ポイントクラウド + フラスタム + ボックス
         # draw_lidar(pc_in_image, fig=self.fig)
@@ -546,6 +546,9 @@ class Ui_MainWindow(object):
         self.ymin = self.Box2DYMin.value()
         self.xmax = self.Box2DXMax.value()
         self.ymax = self.Box2DYMax.value()
+        self.viewx = 0
+        self.viewy = 0
+        self.viewz = 0
         self.box3d = [self.l, self.w, self.h, self.yaw, self.x, self.y, self.z]
         # 画像の表示
         img , pts_box2d = self.ShowImage(update=True)
@@ -567,6 +570,9 @@ class Ui_MainWindow(object):
         self.Box2DYMin.blockSignals(True)
         self.Box2DXMax.blockSignals(True)
         self.Box2DYMax.blockSignals(True)
+        self.ViewX.blockSignals(True)
+        self.ViewY.blockSignals(True)
+        self.ViewZ.blockSignals(True)
         # 値の更新
         obj = self.objects[self.frustum_number]
         self.type = obj.type
@@ -581,6 +587,9 @@ class Ui_MainWindow(object):
         self.ymin = obj.ymin
         self.xmax = obj.xmax
         self.ymax = obj.ymax
+        self.viewx = self.x
+        self.viewy = self.y
+        self.viewz = self.z
         self.ObjectClass.setCurrentText(self.type)
         self.SizeHeight.setValue(self.h)
         self.SizeWidth.setValue(self.w)
@@ -606,6 +615,9 @@ class Ui_MainWindow(object):
         self.Box2DYMin.blockSignals(False)
         self.Box2DXMax.blockSignals(False)
         self.Box2DYMax.blockSignals(False)
+        self.ViewX.blockSignals(False)
+        self.ViewY.blockSignals(False)
+        self.ViewZ.blockSignals(False)
         return True
 
 
