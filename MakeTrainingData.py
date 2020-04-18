@@ -9,12 +9,14 @@
 from PyQt5 import QtCore, QtGui, QtWidgets, QtOpenGL
 from PyQt5.QtWidgets import QFileDialog, QMessageBox, QPlainTextEdit
 from PyQt5.QtCore    import pyqtSlot
-from OpenGL.GL import *
-from OpenGL.GLU import *
-from OpenGL.GLUT import *
+# from OpenGL.GL import *
+# from OpenGL.GLU import *
+# from OpenGL.GLUT import *
 import os
 import cv2
-import mayavi.mlab as mlab
+# import mayavi.mlab as mlab
+from pyqtgraph.Qt import QtCore, QtGui
+import pyqtgraph.opengl as gl
 import numpy as np
 from viz_util import draw_lidar, draw_frustum_pc, draw_box2d, draw_gt_boxes3d, draw_box3d_pc
 import trans_util
@@ -53,8 +55,9 @@ class Ui_MainWindow(object):
     def __init__(self):
         self.frustum_number = 0
         self.before_frustum_number = -1
+        self.now_file = None
         self.FileOp = None
-        self.fig = mlab.figure(figure=None, bgcolor=(0,0,0), fgcolor=None, engine=None, size=(1000, 1000))
+        # self.fig = mlab.figure(figure=None, bgcolor=(0,0,0), fgcolor=None, engine=None, size=(1000, 1000))
         self.max_frustum_number = 0
         self.objects = None
         self.box3d = None
@@ -65,6 +68,9 @@ class Ui_MainWindow(object):
         self.x = 0
         self.y = 0
         self.z = 0
+        self.viewx = 0
+        self.viewy = 0
+        self.viewz = 0
         self.yaw = 0
         self.xmin = 0
         self.ymin = 0
@@ -80,7 +86,7 @@ class Ui_MainWindow(object):
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(272, 950)
+        MainWindow.resize(272, 970)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
 
@@ -90,45 +96,57 @@ class Ui_MainWindow(object):
         self.TextHeight.setAlignment(QtCore.Qt.AlignCenter)
         self.TextHeight.setObjectName("TextHeight")
         self.TextWidth = QtWidgets.QLabel(self.centralwidget)
-        self.TextWidth.setGeometry(QtCore.QRect(10, 50, 41, 31))
+        self.TextWidth.setGeometry(QtCore.QRect(10, 55, 41, 31))
         self.TextWidth.setAlignment(QtCore.Qt.AlignCenter)
         self.TextWidth.setObjectName("TextWidth")
         self.TextLength = QtWidgets.QLabel(self.centralwidget)
-        self.TextLength.setGeometry(QtCore.QRect(10, 80, 41, 31))
+        self.TextLength.setGeometry(QtCore.QRect(10, 90, 41, 31))
         self.TextLength.setAlignment(QtCore.Qt.AlignCenter)
         self.TextLength.setObjectName("TextLength")
         self.TextX = QtWidgets.QLabel(self.centralwidget)
-        self.TextX.setGeometry(QtCore.QRect(10, 110, 41, 31))
+        self.TextX.setGeometry(QtCore.QRect(10, 140, 41, 31))
         self.TextX.setAlignment(QtCore.Qt.AlignCenter)
         self.TextX.setObjectName("TextX")
         self.TextY = QtWidgets.QLabel(self.centralwidget)
-        self.TextY.setGeometry(QtCore.QRect(10, 140, 41, 31))
+        self.TextY.setGeometry(QtCore.QRect(10, 175, 41, 31))
         self.TextY.setAlignment(QtCore.Qt.AlignCenter)
         self.TextY.setObjectName("TextY")
         self.TextZ = QtWidgets.QLabel(self.centralwidget)
-        self.TextZ.setGeometry(QtCore.QRect(10, 170, 41, 31))
+        self.TextZ.setGeometry(QtCore.QRect(10, 210, 41, 31))
         self.TextZ.setAlignment(QtCore.Qt.AlignCenter)
         self.TextZ.setObjectName("TextZ")
         self.TextYaw = QtWidgets.QLabel(self.centralwidget)
-        self.TextYaw.setGeometry(QtCore.QRect(10, 200, 41, 31))
+        self.TextYaw.setGeometry(QtCore.QRect(10, 260, 41, 31))
         self.TextYaw.setAlignment(QtCore.Qt.AlignCenter)
         self.TextYaw.setObjectName("TextYaw")
         self.TextBox2DXMin = QtWidgets.QLabel(self.centralwidget)
-        self.TextBox2DXMin.setGeometry(QtCore.QRect(10, 230, 41, 31))
+        self.TextBox2DXMin.setGeometry(QtCore.QRect(10, 310, 41, 31))
         self.TextBox2DXMin.setAlignment(QtCore.Qt.AlignCenter)
         self.TextBox2DXMin.setObjectName("TextBox2DXMin")
-        self.TextBox2DXMax = QtWidgets.QLabel(self.centralwidget)
-        self.TextBox2DXMax.setGeometry(QtCore.QRect(10, 260, 41, 31))
-        self.TextBox2DXMax.setAlignment(QtCore.Qt.AlignCenter)
-        self.TextBox2DXMax.setObjectName("TextBox2DXMax")
         self.TextBox2DYMin = QtWidgets.QLabel(self.centralwidget)
-        self.TextBox2DYMin.setGeometry(QtCore.QRect(10, 290, 41, 31))
+        self.TextBox2DYMin.setGeometry(QtCore.QRect(10, 345, 41, 31))
         self.TextBox2DYMin.setAlignment(QtCore.Qt.AlignCenter)
         self.TextBox2DYMin.setObjectName("TextBox2DYMin")
+        self.TextBox2DXMax = QtWidgets.QLabel(self.centralwidget)
+        self.TextBox2DXMax.setGeometry(QtCore.QRect(10, 380, 41, 31))
+        self.TextBox2DXMax.setAlignment(QtCore.Qt.AlignCenter)
+        self.TextBox2DXMax.setObjectName("TextBox2DXMax")    
         self.TextBox2DYMax = QtWidgets.QLabel(self.centralwidget)
-        self.TextBox2DYMax.setGeometry(QtCore.QRect(10, 320, 41, 31))
+        self.TextBox2DYMax.setGeometry(QtCore.QRect(10, 415, 41, 31))
         self.TextBox2DYMax.setAlignment(QtCore.Qt.AlignCenter)
         self.TextBox2DYMax.setObjectName("TextBox2DYMax")
+        self.TextViewX = QtWidgets.QLabel(self.centralwidget)
+        self.TextViewX.setGeometry(QtCore.QRect(10, 465, 41, 31))
+        self.TextViewX.setAlignment(QtCore.Qt.AlignCenter)
+        self.TextViewX.setObjectName("TextViewX")
+        self.TextViewY = QtWidgets.QLabel(self.centralwidget)
+        self.TextViewY.setGeometry(QtCore.QRect(10, 500, 41, 31))
+        self.TextViewY.setAlignment(QtCore.Qt.AlignCenter)
+        self.TextViewY.setObjectName("TextViewY")
+        self.TextViewZ = QtWidgets.QLabel(self.centralwidget)
+        self.TextViewZ.setGeometry(QtCore.QRect(10, 535, 41, 31))
+        self.TextViewZ.setAlignment(QtCore.Qt.AlignCenter)
+        self.TextViewZ.setObjectName("TextViewZ")
 
         # H
         self.SizeHeight = QtWidgets.QDoubleSpinBox(self.centralwidget)
@@ -141,76 +159,97 @@ class Ui_MainWindow(object):
         self.SizeWidth = QtWidgets.QDoubleSpinBox(self.centralwidget)
         self.SizeWidth.setMaximum(1000)
         self.SizeWidth.setMinimum(-1000)
-        self.SizeWidth.setGeometry(QtCore.QRect(51, 50, 211, 31))
+        self.SizeWidth.setGeometry(QtCore.QRect(51, 55, 211, 31))
         self.SizeWidth.setObjectName("SizeWidth")
         self.SizeWidth.valueChanged.connect(self.GetValue)
         # L
         self.SizeLength = QtWidgets.QDoubleSpinBox(self.centralwidget)
         self.SizeLength.setMaximum(1000)
         self.SizeLength.setMinimum(-1000)
-        self.SizeLength.setGeometry(QtCore.QRect(51, 80, 211, 31))
+        self.SizeLength.setGeometry(QtCore.QRect(51, 90, 211, 31))
         self.SizeLength.setObjectName("SizeLength")
         self.SizeLength.valueChanged.connect(self.GetValue)
         # X
         self.PositionX = QtWidgets.QDoubleSpinBox(self.centralwidget)
         self.PositionX.setMaximum(1000)
         self.PositionX.setMinimum(-1000)
-        self.PositionX.setGeometry(QtCore.QRect(51, 110, 211, 31))
+        self.PositionX.setGeometry(QtCore.QRect(51, 140, 211, 31))
         self.PositionX.setObjectName("PositionX")
         self.PositionX.valueChanged.connect(self.GetValue)
         # Y
         self.PositionY = QtWidgets.QDoubleSpinBox(self.centralwidget)
         self.PositionY.setMaximum(1000)
         self.PositionY.setMinimum(-1000)
-        self.PositionY.setGeometry(QtCore.QRect(51, 140, 211, 31))
+        self.PositionY.setGeometry(QtCore.QRect(51, 175, 211, 31))
         self.PositionY.setObjectName("PositionY")
         self.PositionY.valueChanged.connect(self.GetValue)
         #Z
         self.PositionZ = QtWidgets.QDoubleSpinBox(self.centralwidget)
         self.PositionZ.setMaximum(1000)
         self.PositionZ.setMinimum(-1000)
-        self.PositionZ.setGeometry(QtCore.QRect(51, 170, 211, 31))
+        self.PositionZ.setGeometry(QtCore.QRect(51, 210, 211, 31))
         self.PositionZ.setObjectName("PositionZ")
         self.PositionZ.valueChanged.connect(self.GetValue)
         # Yaw
         self.AngleYaw = QtWidgets.QDoubleSpinBox(self.centralwidget)
         self.AngleYaw.setMaximum(np.pi)
         self.AngleYaw.setMinimum(-np.pi)
-        self.AngleYaw.setGeometry(QtCore.QRect(51, 200, 211, 31))
+        self.AngleYaw.setGeometry(QtCore.QRect(51, 260, 211, 31))
         self.AngleYaw.setObjectName("AngleYaw")
         self.AngleYaw.valueChanged.connect(self.GetValue)
         # XMin
         self.Box2DXMin = QtWidgets.QDoubleSpinBox(self.centralwidget)
         self.Box2DXMin.setMaximum(2000)
         self.Box2DXMin.setMinimum(0)
-        self.Box2DXMin.setGeometry(QtCore.QRect(51, 230, 211, 31))
+        self.Box2DXMin.setGeometry(QtCore.QRect(51, 310, 211, 31))
         self.Box2DXMin.setObjectName("Box2DXMin")
         self.Box2DXMin.valueChanged.connect(self.GetValue)
         # YMin
         self.Box2DYMin = QtWidgets.QDoubleSpinBox(self.centralwidget)
         self.Box2DYMin.setMaximum(2000)
         self.Box2DYMin.setMinimum(0)
-        self.Box2DYMin.setGeometry(QtCore.QRect(51, 290, 211, 31))
+        self.Box2DYMin.setGeometry(QtCore.QRect(51, 345, 211, 31))
         self.Box2DYMin.setObjectName("Box2DYMin")
         self.Box2DYMin.valueChanged.connect(self.GetValue)
         # XMax
         self.Box2DXMax = QtWidgets.QDoubleSpinBox(self.centralwidget)
         self.Box2DXMax.setMaximum(2000)
         self.Box2DXMax.setMinimum(0)
-        self.Box2DXMax.setGeometry(QtCore.QRect(51, 260, 211, 31))
+        self.Box2DXMax.setGeometry(QtCore.QRect(51, 380, 211, 31))
         self.Box2DXMax.setObjectName("Box2DXMax")
         self.Box2DXMax.valueChanged.connect(self.GetValue)
         # YMax
         self.Box2DYMax = QtWidgets.QDoubleSpinBox(self.centralwidget)
         self.Box2DYMax.setMaximum(2000)
         self.Box2DYMax.setMinimum(0)
-        self.Box2DYMax.setGeometry(QtCore.QRect(51, 320, 211, 31))
+        self.Box2DYMax.setGeometry(QtCore.QRect(51, 415, 211, 31))
         self.Box2DYMax.setObjectName("Box2DYMax")
         self.Box2DYMax.valueChanged.connect(self.GetValue)
+        # viewX
+        self.ViewX = QtWidgets.QDoubleSpinBox(self.centralwidget)
+        self.ViewX.setMaximum(1000)
+        self.ViewX.setMinimum(-1000)
+        self.ViewX.setGeometry(QtCore.QRect(51, 465, 211, 31))
+        self.ViewX.setObjectName("ViewX")
+        self.ViewX.valueChanged.connect(self.GetValue)
+        # viewY
+        self.ViewY = QtWidgets.QDoubleSpinBox(self.centralwidget)
+        self.ViewY.setMaximum(1000)
+        self.ViewY.setMinimum(-1000)
+        self.ViewY.setGeometry(QtCore.QRect(51, 500, 211, 31))
+        self.ViewY.setObjectName("ViewY")
+        self.ViewY.valueChanged.connect(self.GetValue)
+        #viewZ
+        self.ViewZ = QtWidgets.QDoubleSpinBox(self.centralwidget)
+        self.ViewZ.setMaximum(1000)
+        self.ViewZ.setMinimum(-1000)
+        self.ViewZ.setGeometry(QtCore.QRect(51, 535, 211, 31))
+        self.ViewZ.setObjectName("ViewZ")
+        self.ViewZ.valueChanged.connect(self.GetValue)
        
         # クラス
         self.ObjectClass = QtWidgets.QComboBox(self.centralwidget)
-        self.ObjectClass.setGeometry(QtCore.QRect(10, 350, 252, 31))
+        self.ObjectClass.setGeometry(QtCore.QRect(10, 585, 252, 31))
         self.ObjectClass.setObjectName("ObjectClass")
         self.ObjectClass.addItem("")
         self.ObjectClass.addItem("")
@@ -222,31 +261,43 @@ class Ui_MainWindow(object):
 
         # ボタン
         self.BeforeFrame = QtWidgets.QPushButton(self.centralwidget)
-        self.BeforeFrame.setGeometry(QtCore.QRect(10, 400, 121, 61))
+        self.BeforeFrame.setGeometry(QtCore.QRect(10, 635, 121, 41))
         self.BeforeFrame.setObjectName("BeforeFrame")
         self.BeforeFrame.clicked.connect(self.OpenBeforeFrame)
         self.NextFrame = QtWidgets.QPushButton(self.centralwidget)
-        self.NextFrame.setGeometry(QtCore.QRect(140, 400, 121, 61))
+        self.NextFrame.setGeometry(QtCore.QRect(140, 635, 121, 41))
         self.NextFrame.setObjectName("NextFrame")
         self.NextFrame.clicked.connect(self.OpenNextFrame)
         self.Before2DBox = QtWidgets.QPushButton(self.centralwidget)
-        self.Before2DBox.setGeometry(QtCore.QRect(10, 490, 121, 61))
+        self.Before2DBox.setGeometry(QtCore.QRect(10, 685, 121, 41))
         self.Before2DBox.setObjectName("Before2DBox")
         self.Before2DBox.clicked.connect(self.ViewBeforeFrustum)
         self.Next2DBox = QtWidgets.QPushButton(self.centralwidget)
-        self.Next2DBox.setGeometry(QtCore.QRect(140, 490, 121, 61))
+        self.Next2DBox.setGeometry(QtCore.QRect(140, 685, 121, 41))
         self.Next2DBox.setObjectName("Next2DBox")
         self.Next2DBox.clicked.connect(self.ViewNextFrustum)
-        self.SaveLabel = QtWidgets.QPushButton(self.centralwidget)
-        self.SaveLabel.setGeometry(QtCore.QRect(10, 580, 251, 61))
-        self.SaveLabel.setObjectName("SaveLabel")
-        self.SaveLabel.clicked.connect(self.SaveBoxLabel)
+        # self.SaveLabel = QtWidgets.QPushButton(self.centralwidget)
+        # self.SaveLabel.setGeometry(QtCore.QRect(10, 650, 251, 61))
+        # self.SaveLabel.setObjectName("SaveLabel")
+        # self.SaveLabel.clicked.connect(self.SaveBoxLabel)
+
+        # now
+        self.NowFile = QPlainTextEdit(self.centralwidget)
+        self.NowFile.setGeometry(QtCore.QRect(10, 735, 251, 30))
+        self.NowFile.setObjectName("NowFile")
 
         # log
         self.SaveLog = QPlainTextEdit(self.centralwidget)
-        self.SaveLog.setGeometry(QtCore.QRect(10, 670, 251, 200))
+        self.SaveLog.setGeometry(QtCore.QRect(10, 770, 251, 150))
         self.SaveLog.setObjectName("SaveLog")
 
+        # ポイントクラウド
+        self.ViewPointCloud = gl.GLViewWidget()
+        self.ViewPointCloud.setWindowTitle('PointCloud')
+        self.ViewPointCloud.show()
+        self.grid = gl.GLGridItem()
+        self.ViewPointCloud.addItem(self.grid)
+        
         # メニューバー
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
@@ -263,6 +314,7 @@ class Ui_MainWindow(object):
         self.OpenFile.triggered.connect(self.OpenDialog)
         self.SaveFile = QtWidgets.QAction(MainWindow)
         self.SaveFile.setObjectName("SaveFile")
+        self.SaveFile.triggered.connect(self.SaveBoxLabel)
         self.menuFile.addAction(self.OpenFile)
         self.menuFile.addAction(self.SaveFile)
         self.menubar.addAction(self.menuFile.menuAction())
@@ -284,6 +336,9 @@ class Ui_MainWindow(object):
         self.TextBox2DXMax.setText(_translate("MainWindow", "Xmax"))
         self.TextBox2DYMin.setText(_translate("MainWindow", "Ymin"))
         self.TextBox2DYMax.setText(_translate("MainWindow", "Ymax"))
+        self.TextViewX.setText(_translate("MainWindow", "viewX"))
+        self.TextViewY.setText(_translate("MainWindow", "viewY"))
+        self.TextViewZ.setText(_translate("MainWindow", "viewZ"))
         self.ObjectClass.setItemText(0, _translate("MainWindow", "Class"))
         self.ObjectClass.setItemText(1, _translate("MainWindow", "Car"))
         self.ObjectClass.setItemText(2, _translate("MainWindow", "Pedestrian"))
@@ -294,7 +349,7 @@ class Ui_MainWindow(object):
         self.BeforeFrame.setText(_translate("MainWindow", "◀|"))
         self.Before2DBox.setText(_translate("MainWindow", "◁|"))
         self.Next2DBox.setText(_translate("MainWindow", "|▷"))
-        self.SaveLabel.setText(_translate("MainWindoe", "Save"))
+        # self.SaveLabel.setText(_translate("MainWindoe", "Save"))
         self.menuFile.setTitle(_translate("MainWindow", "File"))
         self.OpenFile.setText(_translate("MainWindow", "開く"))
         self.OpenFile.setShortcut(_translate("MainWindow", "Ctrl+O"))
@@ -308,6 +363,9 @@ class Ui_MainWindow(object):
         self.FileOp = FileOperation(image_file_name[0])
         # frustum_numberの初期化
         self.frustum_number = 0
+         # 現在のファイル
+        self.MakeNowFile()
+        self.NowFile.setPlainText(self.now_file)
         # objestの作成
         self.objects = self.FileOp.read_label_file()
         self.InputValue()
@@ -319,7 +377,7 @@ class Ui_MainWindow(object):
         
     def ShowPointCloud(self, img, pts_box2d):
         # ウィンドウの初期化
-        mlab.clf(self.fig)
+        # mlab.clf(self.fig)
         # ポイントクラウドの読み込み
         pc_velo = self.FileOp.read_pc_file()
         pc_in_image = self.FileOp.get_pc_in_image(pc_velo, img.shape[1], img.shape[0])
@@ -327,11 +385,15 @@ class Ui_MainWindow(object):
         calib = self.FileOp.calib
         # 3Dボックスの頂点の取得
         _, pts_box3d = trans_util.compute_box_3d(self.objects[self.frustum_number] , calib.P, self.box3d)
+        self.pc = gl.GLScatterPlotItem(pos=pc_in_image, size=0.1, color=(1, 1, 1, 1))
+        self.ViewPointCloud.pan(100, 0, 0)
+        self.ViewPointCloud.addItem(self.pc)
         # ポイントクラウド + フラスタム + ボックス
-        draw_lidar(pc_in_image, fig=self.fig)
-        draw_gt_boxes3d([pts_box3d],obj_type=self.type, color=ObjectColor(self.type, mode="3d"), fig=self.fig)
-        draw_frustum_pc(pc_in_image, pts_box2d, calib=calib, fig=self.fig)
-        draw_box3d_pc(pc_in_image, pts_box3d, color=ObjectColor(self.type, mode="3d"), fig=self.fig)
+        # draw_lidar(pc_in_image, fig=self.fig)
+        # draw_gt_boxes3d([pts_box3d],obj_type=self.type, color=ObjectColor(self.type, mode="3d"), fig=self.fig)
+        # draw_frustum_pc(pc_in_image, pts_box2d, calib=calib, fig=self.fig)
+        # draw_box3d_pc(pc_in_image, pts_box3d, color=ObjectColor(self.type, mode="3d"), fig=self.fig)
+        
         return True
     
     def ShowImage(self, update=False):
@@ -346,6 +408,10 @@ class Ui_MainWindow(object):
         draw_box2d(img, pts_box2d, ObjectColor(self.type, mode="2d"))
         return img, pts_box2d
     
+    def MakeNowFile(self):
+        self.now_file = str(os.path.basename(self.FileOp.new_label_file_name)) + ' : '+ str(self.frustum_number)
+        return self.now_file
+
     def MakeSaveLabel(self):
         self.save_label = str(self.type) + ' ' + '-1 -10 -10 ' + \
                 str(self.xmin) + ' ' + str(self.ymin) + ' ' + str(self.xmax) + ' ' + str(self.ymax) + ' ' + \
@@ -356,7 +422,7 @@ class Ui_MainWindow(object):
 
     def MakeSaveLog(self):
         self.save_log = str(os.path.basename(self.FileOp.new_label_file_name)) + '\nfrustum_number : ' + \
-            str(self.frustum_number) + '\nClass : ' + str(self.type)
+            str(self.frustum_number) + '\nClass : ' + str(self.type) + '\n'
         return self.save_log
 
     def SaveBoxLabel(self):
@@ -394,6 +460,9 @@ class Ui_MainWindow(object):
         # frustum_numberの初期化
         self.frustum_number = 0
         self.before_frustum_number = -1
+        # 現在のファイル
+        self.MakeNowFile()
+        self.NowFile.setPlainText(self.now_file)
          # objestの作成
         self.objects = self.FileOp.read_label_file()
         self.InputValue()
@@ -411,6 +480,9 @@ class Ui_MainWindow(object):
         # frustum_numberの初期化
         self.frustum_number = 0
         self.before_frustum_number = -1
+        # 現在のファイル
+        self.MakeNowFile()
+        self.NowFile.setPlainText(self.now_file)
         # objestの作成
         self.objects = self.FileOp.read_label_file()
         self.InputValue()
@@ -427,6 +499,9 @@ class Ui_MainWindow(object):
         if self.frustum_number >= self.max_frustum_number:
             self.frustum_number -= 1
             return True
+        # 現在のファイル
+        self.MakeNowFile()
+        self.NowFile.setPlainText(self.now_file)
         # frustumの更新
         self.InputValue()
         # 画像の表示
@@ -443,6 +518,9 @@ class Ui_MainWindow(object):
             print('0')
             self.frustum_number = 0
             return True
+        # 現在のファイル
+        self.MakeNowFile()
+        self.NowFile.setPlainText(self.now_file)
         # frustumの更新
         self.InputValue()
         # 画像の表示
