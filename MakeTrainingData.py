@@ -18,7 +18,8 @@ import cv2
 from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph.opengl as gl
 import numpy as np
-from viz_util import draw_lidar, draw_frustum_pc, draw_box2d, draw_gt_boxes3d, draw_box3d_pc, extract_pc_in_box3d
+from viz_util import extract_pc_in_box3d, draw_box2d, NewGLAxis
+# from viz_util import draw_lidar, draw_frustum_pc, draw_box2d, draw_gt_boxes3d, draw_box3d_pc, extract_pc_in_box3d
 import trans_util
 from file_util import *
 
@@ -296,7 +297,8 @@ class Ui_MainWindow(object):
         self.ViewPointCloud.setWindowTitle('PointCloud')
         self.ViewPointCloud.show()
         self.grid = gl.GLGridItem() 
-        self.grid.setSize(100, 100, 0)
+        self.grid.setSpacing(x=1, y=1, z=0)
+        self.grid.setSize(300, 300, 0)
         self.ViewPointCloud.addItem(self.grid)
         
         # メニューバー
@@ -346,6 +348,7 @@ class Ui_MainWindow(object):
         self.ObjectClass.setItemText(3, _translate("MainWindow", "Cyclist"))
         self.ObjectClass.setItemText(4, _translate("MainWindow", "Truck"))
         self.ObjectClass.setItemText(5, _translate("MainWindow", "Van"))
+        self.ObjectClass.setItemText(6, _translate("MainWindow", "Misc"))
         self.NextFrame.setText(_translate("MainWindow", "|▶"))
         self.BeforeFrame.setText(_translate("MainWindow", "◀|"))
         self.Before2DBox.setText(_translate("MainWindow", "◁|"))
@@ -405,32 +408,59 @@ class Ui_MainWindow(object):
         color = np.ones_like(pc_in_image)
         color[:, :3] = pc_in_image[:, :3]
         # 距離によって色を変化
-        dist = np.zeros((np.shape(pc_in_image)[0]))
-        for loop in range(3):
-            for loop_loop in range(np.shape(pc_in_image)[0]):
-                dist[loop_loop] += color[loop_loop, loop]**2
-        for loop_loop in range(np.shape(pc_in_image)[0]):
-                dist[loop_loop] = np.sqrt(dist[loop_loop])
-        _max =  np.max(dist)
-        dist /=  _max
-        one_line = np.ones_like(dist)
-        color[:, 0] = dist**2
-        color[:, 1] = dist
-        color[:, 2] = one_line-dist
+        # dist = np.zeros((np.shape(pc_in_image)[0]))
+        # for loop in range(3):
+        #     for loop_loop in range(np.shape(pc_in_image)[0]):
+        #         dist[loop_loop] += color[loop_loop, loop]**2
+        # for loop_loop in range(np.shape(pc_in_image)[0]):
+        #         dist[loop_loop] = np.sqrt(dist[loop_loop])
+        # _max =  np.max(dist)
+        # dist /=  _max
+        # one_line = np.ones_like(dist)
+        # color[:, 0] = dist**2
+        # color[:, 1] = dist
+        # color[:, 2] = one_line-dist
+        # 反射強度によって色を変化
+        intensity = pc_in_image[:, 3]
+        one_line = np.ones_like(intensity)
+        zero_line = np.zeros_like(intensity)
+        # color[:, 0] = intensity**2
+        # color[:, 1] = intensity
+        # color[:, 2] = one_line-intensity
+        color[:, 0] = intensity
+        color[:, 1] = intensity
+        color[:, 2] = one_line
+        # サイズの固定
         size = 3
+        # 表示ウィンドウの初期化
+        for item in self.ViewPointCloud.items:
+            self.ViewPointCloud.removeItem(item)
+        self.ViewPointCloud.items = []
+        self.ViewPointCloud.update()
+        # グリッドの生成
+        self.ViewPointCloud.opts['center'] = QtGui.QVector3D(self.viewx, self.viewy, self.viewz)
+        self.grid.setSize(300, 300, 0)
+        self.ViewPointCloud.addItem(self.grid)
+        # 原点と座標軸の描画
+        axis = NewGLAxis(size=QtGui.QVector3D(100, 100, 10))
+        self.ViewPointCloud.addItem(axis)
+        origin = gl.GLScatterPlotItem(pos=np.zeros((1, 3)), color=(1, 1, 1, 1), size=10, pxMode=True)
+        self.ViewPointCloud.addItem(origin)
+        # 10メートルごとにライン
+        # t = np.linspace()
         # 表示
-        pc = gl.GLScatterPlotItem(pos=pc_in_image[pc_in_frustum_inds, :3], color=color, size=size, pxMode=True)
-        self.ViewPointCloud.addItem(pc)
-        pc = gl.GLScatterPlotItem(pos=pc_in_frustum[pc_in_box3d_inds, :3], color=(1, 1, 1, 1), size=size, pxMode=True)
-        self.ViewPointCloud.addItem(pc)
-        pc = gl.GLScatterPlotItem(pos=pc_in_box3d[:, :3], color=ObjectColor(self.type, mode="3d"), size=size, pxMode=True)
-        self.ViewPointCloud.addItem(pc)
+        gl_pc_in_image = gl.GLScatterPlotItem(pos=pc_in_image[pc_in_frustum_inds, :3], color=color, size=size, pxMode=True)
+        self.ViewPointCloud.addItem(gl_pc_in_image)
+        gl_pc_in_frustum = gl.GLScatterPlotItem(pos=pc_in_frustum[pc_in_box3d_inds, :3], color=(1, 1, 1, 1), size=size, pxMode=True)
+        self.ViewPointCloud.addItem(gl_pc_in_frustum)
+        gl_pc_in_box3d = gl.GLScatterPlotItem(pos=pc_in_box3d[:, :3], color=ObjectColor(self.type, mode="3d"), size=size, pxMode=True)
+        self.ViewPointCloud.addItem(gl_pc_in_box3d)
+        # self.ViewPointCloud.setCameraPosition(pos=[self.viewx, self.viewy, self.viewz])
         # ポイントクラウド + フラスタム + ボックス
         # draw_lidar(pc_in_image, fig=self.fig)
         # draw_gt_boxes3d([pts_box3d],obj_type=self.type, color=ObjectColor(self.type, mode="3d"), fig=self.fig)
         # draw_frustum_pc(pc_in_image, pts_box2d, calib=calib, fig=self.fig)
         # draw_box3d_pc(pc_in_image, pts_box3d, color=ObjectColor(self.type, mode="3d"), fig=self.fig)
-        
         return True
     
     def ShowImage(self, update=False):
