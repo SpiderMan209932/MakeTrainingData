@@ -57,29 +57,6 @@ def extract_pc_in_box3d(pc, box3d):
     box3d_roi_inds = in_hull(pc[:,0:3], box3d)
     return pc[box3d_roi_inds,:], box3d_roi_inds
 
-# def draw_axis(axis):
-#     axis.setupGLState()    
-#     if axis.antialias:
-#         glEnable(GL_LINE_SMOOTH)
-#         glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
-#     glBegin( GL_LINES )
-#     glLineWidth = 3
-#     x,y,z = axis.size()
-#     #Draw Z
-#     glColor4f(1, 0, 0, 1)
-#     glVertex3f(0, 0, 0)
-#     glVertex3f(0, 0, z)
-#     #Draw Y
-#     glColor4f(0, 1, 0, 1)
-#     glVertex3f(0, 0, 0)
-#     glVertex3f(0, y, 0)
-#     #Draw X
-#     glColor4f(0, 0, 1, 1)
-#     glVertex3f(0, 0, 0)
-#     glVertex3f(x, 0, 0)
-#     glEnd()
-#     return axis
-
 def draw_frustum_pc(pc, pts_2d, calib, fig):    
     pc2d = calib.project_velo_to_image(pc[:, :3])
     box2d_inds = (pc2d[:, 0] < pts_2d[2]) &\
