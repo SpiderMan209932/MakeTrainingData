@@ -18,7 +18,7 @@ import cv2
 from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph.opengl as gl
 import numpy as np
-from viz_util import draw_lidar, draw_frustum_pc, draw_box2d, draw_gt_boxes3d, draw_box3d_pc
+from viz_util import draw_lidar, draw_frustum_pc, draw_box2d, draw_gt_boxes3d, draw_box3d_pc, extract_pc_in_box3d
 import trans_util
 from file_util import *
 
@@ -38,17 +38,17 @@ def ObjectColor(obj_type, mode):
             color = (255, 255, 255)
     elif mode=="3d":
         if obj_type=="Car":
-            color = (1, 0, 0) 
+            color = (1, 0, 0, 1) 
         elif obj_type=="Pedestrian":
-            color = (1, 1, 0)
+            color = (1, 1, 0, 1)
         elif obj_type=="Cyclist":
-            color = (0, 1, 0)
+            color = (0, 1, 0, 1)
         elif obj_type=="Truck":
-            color = (0, 1, 1)
+            color = (0, 1, 1, 1)
         elif obj_type=="Van":
-            color = (1, 0, 1)
+            color = (1, 0, 1, 1)
         else:
-            color = (1, 1, 1)
+            color = (1, 1, 1, 1)
     return color
 
 class Ui_MainWindow(object):
@@ -295,7 +295,8 @@ class Ui_MainWindow(object):
         self.ViewPointCloud = gl.GLViewWidget()
         self.ViewPointCloud.setWindowTitle('PointCloud')
         self.ViewPointCloud.show()
-        self.grid = gl.GLGridItem()
+        self.grid = gl.GLGridItem() 
+        self.grid.setSize(100, 100, 0)
         self.ViewPointCloud.addItem(self.grid)
         
         # メニューバー
@@ -385,9 +386,45 @@ class Ui_MainWindow(object):
         calib = self.FileOp.calib
         # 3Dボックスの頂点の取得
         _, pts_box3d = trans_util.compute_box_3d(self.objects[self.frustum_number] , calib.P, self.box3d)
-        self.pc = gl.GLScatterPlotItem(pos=pc_in_image, size=0.1, color=(1, 1, 1, 1))
-        self.ViewPointCloud.pan(self.viewx, self.viewy, self.viewz)
-        self.ViewPointCloud.addItem(self.pc)
+        # frustum内の点群のとインデックスの取得
+        pc_in_frustum, pc_in_frustum_inds = trans_util.get_frustum_pc(pc_in_image, pts_box2d, calib)
+        for loop in range(len(pc_in_frustum_inds)):
+            if pc_in_frustum_inds[loop]==True:
+                pc_in_frustum_inds[loop]=False
+            else:
+                pc_in_frustum_inds[loop]=True
+        # 3Dボックス内の点群とインデックスの取得
+        pc_in_box3d, pc_in_box3d_inds = extract_pc_in_box3d(pc_in_frustum, pts_box3d)
+        # print(pc_in_box3d)
+        for loop in range(len(pc_in_box3d_inds)):
+            if pc_in_box3d_inds[loop]==True:
+                pc_in_box3d_inds[loop] = False
+            else:
+                pc_in_box3d_inds[loop] = True
+        # 点群の色の設定
+        color = np.ones_like(pc_in_image)
+        color[:, :3] = pc_in_image[:, :3]
+        # 距離によって色を変化
+        dist = np.zeros((np.shape(pc_in_image)[0]))
+        for loop in range(3):
+            for loop_loop in range(np.shape(pc_in_image)[0]):
+                dist[loop_loop] += color[loop_loop, loop]**2
+        for loop_loop in range(np.shape(pc_in_image)[0]):
+                dist[loop_loop] = np.sqrt(dist[loop_loop])
+        _max =  np.max(dist)
+        dist /=  _max
+        one_line = np.ones_like(dist)
+        color[:, 0] = dist**2
+        color[:, 1] = dist
+        color[:, 2] = one_line-dist
+        size = 3
+        # 表示
+        pc = gl.GLScatterPlotItem(pos=pc_in_image[pc_in_frustum_inds, :3], color=color, size=size, pxMode=True)
+        self.ViewPointCloud.addItem(pc)
+        pc = gl.GLScatterPlotItem(pos=pc_in_frustum[pc_in_box3d_inds, :3], color=(1, 1, 1, 1), size=size, pxMode=True)
+        self.ViewPointCloud.addItem(pc)
+        pc = gl.GLScatterPlotItem(pos=pc_in_box3d[:, :3], color=ObjectColor(self.type, mode="3d"), size=size, pxMode=True)
+        self.ViewPointCloud.addItem(pc)
         # ポイントクラウド + フラスタム + ボックス
         # draw_lidar(pc_in_image, fig=self.fig)
         # draw_gt_boxes3d([pts_box3d],obj_type=self.type, color=ObjectColor(self.type, mode="3d"), fig=self.fig)
@@ -587,9 +624,9 @@ class Ui_MainWindow(object):
         self.ymin = obj.ymin
         self.xmax = obj.xmax
         self.ymax = obj.ymax
-        self.viewx = self.x
-        self.viewy = self.y
-        self.viewz = self.z
+        self.viewx = obj.t[0]
+        self.viewy = obj.t[1]
+        self.viewz = obj.t[2]
         self.ObjectClass.setCurrentText(self.type)
         self.SizeHeight.setValue(self.h)
         self.SizeWidth.setValue(self.w)
@@ -602,6 +639,9 @@ class Ui_MainWindow(object):
         self.Box2DYMin.setValue(self.ymin)
         self.Box2DXMax.setValue(self.xmax)
         self.Box2DYMax.setValue(self.ymax)
+        self.ViewX.setValue(self.viewx)
+        self.ViewY.setValue(self.viewy)
+        self.ViewZ.setValue(self.viewz)
         # シグナルの有効化
         self.ObjectClass.blockSignals(False)
         self.SizeHeight.blockSignals(False)
