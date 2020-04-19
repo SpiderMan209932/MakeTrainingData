@@ -9,12 +9,42 @@ Ref: https://github.com/hengck23/didi-udacity-2017/blob/master/baseline-04/kitti
 import numpy as np
 import mayavi.mlab as mlab
 import cv2
+from pyqtgraph.Qt import QtCore, QtGui
+import pyqtgraph.opengl as gl
+from OpenGL.GL import *
+from OpenGL.GLU import *
+from OpenGL.GLUT import *
 
 try:
     raw_input          # Python 2
 except NameError:
     raw_input = input  # Python 3
 
+class NewGLAxis(gl.GLAxisItem):
+    def paint(self):
+        self.setupGLState()
+        
+        if self.antialias:
+            glEnable(GL_LINE_SMOOTH)
+            glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
+            
+        glLineWidth(10)
+
+        glBegin( GL_LINES )        
+
+        x,y,z = self.size()
+        glColor4f( 1, 1, 0, 1)  # z is yellow
+        glVertex3f(0, 0, 0)
+        glVertex3f(0, 0, z)
+
+        glColor4f(0, 1, 0, 1)  # y is green
+        glVertex3f(0, 0, 0)
+        glVertex3f(0, y, 0)
+
+        glColor4f(1, 0, 0, 1)  # x is red
+        glVertex3f(0, 0, 0)
+        glVertex3f(x, 0, 0)
+        glEnd()
 
 def in_hull(p, hull):
     from scipy.spatial import Delaunay
@@ -26,6 +56,29 @@ def extract_pc_in_box3d(pc, box3d):
     ''' pc: (N,3), box3d: (8,3) '''
     box3d_roi_inds = in_hull(pc[:,0:3], box3d)
     return pc[box3d_roi_inds,:], box3d_roi_inds
+
+# def draw_axis(axis):
+#     axis.setupGLState()    
+#     if axis.antialias:
+#         glEnable(GL_LINE_SMOOTH)
+#         glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
+#     glBegin( GL_LINES )
+#     glLineWidth = 3
+#     x,y,z = axis.size()
+#     #Draw Z
+#     glColor4f(1, 0, 0, 1)
+#     glVertex3f(0, 0, 0)
+#     glVertex3f(0, 0, z)
+#     #Draw Y
+#     glColor4f(0, 1, 0, 1)
+#     glVertex3f(0, 0, 0)
+#     glVertex3f(0, y, 0)
+#     #Draw X
+#     glColor4f(0, 0, 1, 1)
+#     glVertex3f(0, 0, 0)
+#     glVertex3f(x, 0, 0)
+#     glEnd()
+#     return axis
 
 def draw_frustum_pc(pc, pts_2d, calib, fig):    
     pc2d = calib.project_velo_to_image(pc[:, :3])
