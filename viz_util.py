@@ -78,6 +78,24 @@ def draw_box3d_pc(pc, pts_3d, color, fig):
     mlab.points3d(pc_in_box3d[:,0], pc_in_box3d[:,1], pc_in_box3d[:,2], color=color, mode='point', scale_factor=1, figure=fig)
     return fig
 
+def get_box3d_pts(pts_box3d):
+    pts_box3d_top = np.zeros((5, 3))
+    pts_box3d_piller = np.zeros((8, 3))
+    pts_box3d_bottom = np.zeros((5, 3))
+    l = 0
+    for k in range(0,4):
+        # top
+        pts_box3d_top[k] = pts_box3d[k]
+        # aspect
+        pts_box3d_piller[l] = pts_box3d[k]
+        pts_box3d_piller[l+1] = pts_box3d[k+4]
+        # bottom
+        pts_box3d_bottom[k] = pts_box3d[k+4] 
+        l += 2
+    pts_box3d_top[4] = pts_box3d_top[0]
+    pts_box3d_bottom[4] = pts_box3d_bottom[0]
+    return pts_box3d_top, pts_box3d_bottom, pts_box3d_piller
+
 def draw_lidar_simple(pc, color=None):
     ''' Draw lidar points. simplest set up. '''
     fig = mlab.figure(figure=None, bgcolor=(0,0,0), fgcolor=None, engine=None, size=(1600, 1000))
