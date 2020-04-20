@@ -53,7 +53,7 @@ class FileOperation(object):
         self.calib                  = trans_util.Calibration(self.calib_file_name)
         self.new_label_dir_name     = os.path.join(self.data_dir_name, 'new_label')
         self.new_label_file_name    = os.path.join(self.new_label_dir_name, self.base_file_name+'.txt')
-
+        
     def read_image_file(self):
         img = cv2.imread(self.image_file_name)
         return img
@@ -98,6 +98,11 @@ class FileOperation(object):
                 pts_box2d_frustum[loop, 1] = pts_box2d[y_loop]
                 loop += 1
         return pts_box2d_frustum
+    
+    def write_log(self, log, log_file_name):
+        with open(os.path.join(self.data_dir_name, log_file_name),"a") as f:
+            f.write('%s\n'%log)
+        return True
 
     def make_save_dir(self):
         if os.path.exists(self.new_label_dir_name)==False:
@@ -116,6 +121,8 @@ class FileOperation(object):
     def update(self, num):
         # base_numberの追加
         self.base_file_number       += num
+        if self.base_file_number<0:
+            self.base_file_number   = 0
         # ファイル名の更新
         self.base_file_name         = '%06d'%self.base_file_number
         self.image_file_name        = os.path.join(self.image_dir_name, self.base_file_name + self.image_ext)
