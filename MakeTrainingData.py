@@ -22,6 +22,7 @@ from viz_util import extract_pc_in_box3d, draw_box2d, NewGLAxis, get_box3d_pts
 # from viz_util import draw_lidar, draw_frustum_pc, draw_box2d, draw_gt_boxes3d, draw_box3d_pc, extract_pc_in_box3d
 import trans_util
 from file_util import *
+import datetime
 
 def ObjectColor(obj_type, mode):
     if mode=="2d":
@@ -85,10 +86,12 @@ class Ui_MainWindow(object):
         self.overwrite = False
         self.save_log = None
         self.line_scale = np.zeros((60, 3))
+        self.log_file_name = date
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(272, 970)
+        MainWindow.resize(1110, 940)
+        # MainWindow.resize(272, 970)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
 
@@ -290,12 +293,13 @@ class Ui_MainWindow(object):
 
         # log
         self.SaveLog = QPlainTextEdit(self.centralwidget)
-        self.SaveLog.setGeometry(QtCore.QRect(10, 770, 251, 150))
+        self.SaveLog.setGeometry(QtCore.QRect(10, 770, 251, 100))
         self.SaveLog.setObjectName("SaveLog")
 
         # ポイントクラウド
-        self.ViewPointCloud = gl.GLViewWidget()
-        self.ViewPointCloud.setWindowTitle('PointCloud')
+        self.ViewPointCloud = gl.GLViewWidget(self.centralwidget)
+        self.ViewPointCloud.setGeometry(QtCore.QRect(300, 20, 800, 800))
+        # self.ViewPointCloud.setWindowTitle('PointCloud')
         self.ViewPointCloud.show()
         self.grid = gl.GLGridItem() 
         self.grid.setSpacing(x=1, y=1, z=0)
@@ -517,6 +521,7 @@ class Ui_MainWindow(object):
             if _dialog==QMessageBox.No:
                 return True
         # new_labelへlabelを保存
+        print(self.log_file_name)
         if self.FileOp.write_save_label(self.save_label, self.overwrite)==False:
             save_dialog = QMessageBox.information(None, "Caution", ("すでにファイルが存在します\n" + "上書きしますか?"), QMessageBox.No, QMessageBox.Yes)
             if save_dialog == QMessageBox.Yes:
@@ -524,9 +529,11 @@ class Ui_MainWindow(object):
                 self.FileOp.write_save_label(self.save_label, self.overwrite, delete=True)               
                 self.SaveLog.appendPlainText(self.MakeSaveLog())
                 self.before_frustum_number = self.frustum_number
+                self.FileOp.write_log(self.save_log, '%s.txt'%self.log_file_name)
         else:
             self.SaveLog.appendPlainText(self.MakeSaveLog())
             self.before_frustum_number = self.frustum_number
+            self.FileOp.write_log(self.save_log, '%s.txt'%self.log_file_name)
         return True
 
     def OpenNextFrame(self):
@@ -592,7 +599,6 @@ class Ui_MainWindow(object):
         self.frustum_number -= 1
         # o以上
         if self.frustum_number < 0:
-            print('0')
             self.frustum_number = 0
             return True
         # 現在のファイル
@@ -623,9 +629,9 @@ class Ui_MainWindow(object):
         self.ymin = self.Box2DYMin.value()
         self.xmax = self.Box2DXMax.value()
         self.ymax = self.Box2DYMax.value()
-        self.viewx = 0
-        self.viewy = 0
-        self.viewz = 0
+        self.viewx = self.ViewX.value()
+        self.viewy = self.ViewY.value()
+        self.viewz = self.ViewZ.value()
         self.box3d = [self.l, self.w, self.h, self.yaw, self.x, self.y, self.z]
         # 画像の表示
         img , pts_box2d = self.ShowImage(update=True)
@@ -703,6 +709,8 @@ class Ui_MainWindow(object):
 
 if __name__ == "__main__":
     import sys
+    global date
+    date = datetime.datetime.now().date()
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()
