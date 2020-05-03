@@ -9,17 +9,12 @@
 from PyQt5 import QtCore, QtGui, QtWidgets, QtOpenGL
 from PyQt5.QtWidgets import QFileDialog, QMessageBox, QPlainTextEdit
 from PyQt5.QtCore    import pyqtSlot
-# from OpenGL.GL import *
-# from OpenGL.GLU import *
-# from OpenGL.GLUT import *
 import os
 import cv2
-# import mayavi.mlab as mlab
 from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph.opengl as gl
 import numpy as np
 from viz_util import extract_pc_in_box3d, draw_box2d, NewGLAxis, get_box3d_pts
-# from viz_util import draw_lidar, draw_frustum_pc, draw_box2d, draw_gt_boxes3d, draw_box3d_pc, extract_pc_in_box3d
 import trans_util
 from file_util import *
 import datetime
@@ -298,7 +293,7 @@ class Ui_MainWindow(object):
 
         # ポイントクラウド
         self.ViewPointCloud = gl.GLViewWidget(self.centralwidget)
-        self.ViewPointCloud.setGeometry(QtCore.QRect(300, 20, 800, 800))
+        self.ViewPointCloud.setGeometry(QtCore.QRect(300, 20, 800, 850))
         # self.ViewPointCloud.setWindowTitle('PointCloud')
         self.ViewPointCloud.show()
         self.grid = gl.GLGridItem() 
@@ -326,8 +321,12 @@ class Ui_MainWindow(object):
         self.SaveFile = QtWidgets.QAction(MainWindow)
         self.SaveFile.setObjectName("SaveFile")
         self.SaveFile.triggered.connect(self.SaveBoxLabel)
+        self.NewLabelFile = QtWidgets.QAction(MainWindow)
+        self.NewLabelFile.setObjectName("NewLabelFile")
+        self.NewLabelFile.triggered.connect(self.MakeLabel)
         self.menuFile.addAction(self.OpenFile)
         self.menuFile.addAction(self.SaveFile)
+        self.menuFile.addAction(self.NewLabelFile)
         self.menubar.addAction(self.menuFile.menuAction())
 
         self.retranslateUi(MainWindow)
@@ -367,10 +366,12 @@ class Ui_MainWindow(object):
         self.OpenFile.setShortcut(_translate("MainWindow", "Ctrl+O"))
         self.SaveFile.setText(_translate("MainWindow", "保存"))
         self.SaveFile.setShortcut(_translate("MainWindow", "Ctrl+S"))
+        self.NewLabelFile.setText(_translate("MainWindow", "新規ラベル作成"))
+        self.NewLabelFile.setShortcut(_translate("MainWindow", "Ctrl+n"))
 
     def OpenDialog(self):
         # 画像ファイルの選択
-        image_file_name = QFileDialog.getOpenFileName(caption='Open file', directory='/home/hiroki/KITTI', filter="Image(*.png *.jpg *.jpeg)")
+        image_file_name = QFileDialog.getOpenFileName(caption='Open file',  filter="Image(*.png *.jpg *.jpeg)") #directory='/home',
         # FileOperationのインスタンス作成
         self.FileOp = FileOperation(image_file_name[0])
         # frustum_numberの初期化
@@ -457,7 +458,6 @@ class Ui_MainWindow(object):
             self.line_scale[loop+1] = [loop*10, -150 ,0]
         gl_lines = gl.GLLinePlotItem(pos=self.line_scale, color=(1, 1, 1, 1), width=5, antialias=True, mode='lines')
         self.ViewPointCloud.addItem(gl_lines)
-        # 表示
         # 点群の描画
         gl_pc_in_image = gl.GLScatterPlotItem(pos=pc_in_image[pc_in_frustum_inds, :3], color=color, size=size, pxMode=True)
         self.ViewPointCloud.addItem(gl_pc_in_image)
@@ -612,6 +612,28 @@ class Ui_MainWindow(object):
         self.ShowPointCloud(img, pts_box2d)
         return True
 
+    def MakeLabel(self):
+        # labelファイルに追加
+        with open(self.FileOp.label_file_name, 'a') as f:
+            f.write('Car -1 -10 -10 0 0 100 100 2 2 2 0 0 0\n')
+        # frustum_numberを最大値に
+        self.frustum_number = self.max_frustum_number
+        # max_frustum_numberを更新
+        self.max_frustum_number += 1
+        # objestの作成
+        self.objects = self.FileOp.read_label_file()
+        # 現在のファイル
+        self.MakeNowFile()
+        self.NowFile.setPlainText(self.now_file)
+        # frustumの更新
+        self.InputValue()
+        # 画像の表示
+        img, pts_box2d = self.ShowImage()
+        # ポイントクラウドの表示
+        self.ShowPointCloud(img, pts_box2d)
+        return True
+
+
     def GetValue(self):
         # 初期値では行わない
         if self.ObjectClass.currentText()=="Class":
@@ -705,7 +727,6 @@ class Ui_MainWindow(object):
         self.ViewY.blockSignals(False)
         self.ViewZ.blockSignals(False)
         return True
-
 
 if __name__ == "__main__":
     import sys
