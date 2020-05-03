@@ -49,7 +49,7 @@ class FileOperation(object):
         self.label_file_list        = sorted(glob.glob(os.path.join(self.label_dir_name, '*')))
         self.label2d_file_list      = sorted(glob.glob(os.path.join(self.label2d_dir_name, '*')))
         for i in range(len(self.image_file_list)):
-            if self.image_file_name==self.image_file_list[i]:
+            if os.path.basename(self.image_file_name)==os.path.basename(self.image_file_list[i]):
                 self.image_file_idx = i
         # パケット時間に変更
         self.image_number_list = [i for i in range(len(self.image_file_list))]
@@ -171,9 +171,11 @@ class FileOperation(object):
         if self.image_file_idx<0:
             self.image_file_idx     = 0
         # ファイル名の更新
-        self.base_file_name         = '%06d'%self.base_file_number
-        self.image_file_name        = os.path.join(self.image_dir_name, self.base_file_name + self.image_ext)
+        self.image_file_name        = self.image_file_list[self.image_file_idx]
         image_file_name             = self.image_file_name
+        # self.base_file_name         = '%06d'%self.base_file_number
+        # self.image_file_name        = os.path.join(self.image_dir_name, self.base_file_name + self.image_ext)
+        # image_file_name             = self.image_file_name
         return FileOperation(image_file_name)
         
 if __name__=="__main__":
