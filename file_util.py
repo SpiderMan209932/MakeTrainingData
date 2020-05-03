@@ -43,16 +43,59 @@ class FileOperation(object):
         self.label2d_dir_name       = os.path.join(self.data_dir_name, 'label2d')
         self.label_dir_name         = os.path.join(self.data_dir_name, 'label')
         self.calib_dir_name         = os.path.join(self.data_dir_name, 'calib')
+        # ディレクトリ内のファイルのリストの取得
+        self.image_file_list        = sorted(glob.glob(os.path.join(self.image_dir_name, '*')))
+        self.pointcloud_file_list   = sorted(glob.glob(os.path.join(self.pointcloud_dir_name, '*')))
+        self.label_file_list        = sorted(glob.glob(os.path.join(self.label_dir_name, '*')))
+        self.label2d_file_list      = sorted(glob.glob(os.path.join(self.label2d_dir_name, '*')))
+        for i in range(len(self.image_file_list)):
+            if self.image_file_name==self.image_file_list[i]:
+                self.image_file_idx = i
+        # パケット時間に変更
+        self.image_number_list = [i for i in range(len(self.image_file_list))]
+        self.pointcloud_number_list = [i for i in range(len(self.pointcloud_file_list))]
+        self.label_number_list = [i for i in range(len(self.label_file_list))]
+        self.label2d_number_list = [i for i in range(len(self.label2d_file_list))]
+        for loop in range(len(self.image_file_list)):
+            _file = os.path.splitext(os.path.basename(self.image_file_list[loop]))[0]
+            self.image_number_list[loop] = int(_file[-12:])
+        for loop in range(len(self.pointcloud_file_list)):
+            _file = os.path.splitext(self.pointcloud_file_list[loop])[0]
+            self.pointcloud_number_list[loop] = int(_file[-12:])
+        for loop in range(len(self.label_file_list)):
+            _file = os.path.splitext(self.label_file_list[loop])[0]
+            self.label_number_list[loop] = int(_file[-12:])
+        for loop in range(len(self.label2d_file_list)):
+            _file = os.path.splitext(self.label2d_file_list[loop])[0]
+            self.label2d_number_list[loop] = int(_file[-12:])   
         # 各ファイル名の取得
-        self.base_file_name         = os.path.splitext(os.path.basename(self.image_file_name))[0]
-        self.base_file_number       = int(self.base_file_name)
-        self.pointcloud_file_name   = os.path.join(self.pointcloud_dir_name, self.base_file_name+ '.bin')
-        self.label2d_file_name      = os.path.join(self.label2d_dir_name, self.base_file_name+'.txt')
-        self.label_file_name        = os.path.join(self.label_dir_name, self.base_file_name+'.txt')
-        self.calib_file_name        = os.path.join(self.calib_dir_name, self.base_file_name+'.txt')
+        # self.base_file_name         = os.path.splitext(os.path.basename(self.image_file_name))[0]
+        # self.base_file_number       = int(self.base_file_name)
+        self.base_file_number         = self.image_number_list[self.image_file_idx]
+        #　画像の時間に最も近いポイントクラウドおよびラベルを持ってくる
+        diff = 100
+        for loop in range(len(self.pointcloud_number_list)):
+            pc_num  =  self.pointcloud_number_list[loop]
+            _diff   = abs(pc_num - self.base_file_number) 
+            if _diff<diff:
+                diff = _diff
+                self.pointcloud_file_name = self.pointcloud_file_list[loop]
+                self.pointcloud_file_idx  = loop
+        for loop in range(len(self.label_number_list)):
+            if self.label_number_list[loop]==self.pointcloud_number_list[self.pointcloud_file_idx]:
+                self. label_file_name = self.label_file_list[loop]
+                break
+        for loop in range(len(self.label2d_number_list)):
+            if self.label2d_number_list[loop]==self.pointcloud_number_list[self.pointcloud_file_idx]:
+                self. label2d_file_name = self.label2d_file_list[loop]
+                break
+        self.calib_file_name        = os.path.join(self.calib_dir_name, 'calib.txt')
         self.calib                  = trans_util.Calibration(self.calib_file_name)
         self.new_label_dir_name     = os.path.join(self.data_dir_name, 'new_label')
-        self.new_label_file_name    = os.path.join(self.new_label_dir_name, self.base_file_name+'.txt')
+        self.new_label_file_name    = os.path.join(self.new_label_dir_name, self.label_file_name)
+        # self.pointcloud_file_name   = os.path.join(self.pointcloud_dir_name, self.base_file_name+ '.bin')
+        # self.label2d_file_name      = os.path.join(self.label2d_dir_name, self.base_file_name+'.txt')
+        # self.label_file_name        = os.path.join(self.label_dir_name, self.base_file_name+'.txt')
         
     def read_image_file(self):
         img = cv2.imread(self.image_file_name)
@@ -120,9 +163,13 @@ class FileOperation(object):
 
     def update(self, num):
         # base_numberの追加
-        self.base_file_number       += num
-        if self.base_file_number<0:
-            self.base_file_number   = 0
+        # self.base_file_number       += num
+        # if self.base_file_number<0:
+        #     self.base_file_number   = 0
+        # image_file_idxの更新
+        self.image_file_idx         += num
+        if self.image_file_idx<0:
+            self.image_file_idx     = 0
         # ファイル名の更新
         self.base_file_name         = '%06d'%self.base_file_number
         self.image_file_name        = os.path.join(self.image_dir_name, self.base_file_name + self.image_ext)
