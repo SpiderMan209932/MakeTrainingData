@@ -615,7 +615,7 @@ class Ui_MainWindow(object):
     def MakeLabel(self):
         # labelファイルに追加
         with open(self.FileOp.label_file_name, 'a') as f:
-            f.write('Car -1 -10 -10 0 0 100 100 2 2 2 0 0 0\n')
+            f.write('Car -1 -10 -10 0 0 100 100 2 2 2 0 0 0 0\n')
         # frustum_numberを最大値に
         self.frustum_number = self.max_frustum_number
         # max_frustum_numberを更新
