@@ -251,7 +251,7 @@ def project_to_image(pts_3d, P):
     '''
     n = pts_3d.shape[0]
     pts_3d_extend = np.hstack((pts_3d, np.ones((n,1))))
-    print(('pts_3d_extend shape: ', pts_3d_extend.shape))
+    # print(('pts_3d_extend shape: ', pts_3d_extend.shape))
     pts_2d = np.dot(pts_3d_extend, np.transpose(P)) # nx3
     pts_2d[:,0] /= pts_2d[:,2]
     pts_2d[:,1] /= pts_2d[:,2]
@@ -303,6 +303,27 @@ def compute_box_3d(obj, P, box3d=None):
     #print 'corners_2d: ', corners_2d
     return corners_2d, np.transpose(corners_3d)
 
+def get_frustum_pc(pc, pts_2d, calib):
+    pc2d = calib.project_velo_to_image(pc[:, :3])
+    box2d_inds = (pc2d[:, 0] < pts_2d[2]) &\
+        (pc2d[:, 0] > pts_2d[0]) &\
+            (pc2d[:, 1] < pts_2d[3]) &\
+                (pc2d[:, 1] > pts_2d[1])
+    pc_in_box2d = pc[box2d_inds, :]
+    return pc_in_box2d, box2d_inds
+
+def AddColor(pc, img, calib):
+    # img: h, w, rgb
+    # pc: n, 4
+    pc2d = calib.project_velo_to_image(pc[:, :3])
+    num,  _ = np.shape(pc2d)
+    color = np.zeros((num, 3))
+    for loop in range(num):
+        # print(np.shape(img))
+        # print(loop, pc2d[loop, 0], pc2d[loop, 1])
+        color[loop] = img[int(pc2d[loop, 1]), int(pc2d[loop, 0]), :]
+    new_pc = np.concatenate([pc, color], axis=1)
+    return new_pc
 
 def compute_orientation_3d(obj, P):
     ''' Takes an object and a projection matrix (P) and projects the 3d
