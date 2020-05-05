@@ -408,7 +408,7 @@ class Ui_MainWindow(object):
         # 3Dボックス内の点群とインデックスの取得
         pc_in_box3d, pc_in_box3d_inds = extract_pc_in_box3d(pc_in_frustum, pts_box3d)
         # ポイントクラウドに画像の色を追加
-        pc_with_color = trans_util.AddColor(pc_in_image, img, calib)
+        # pc_with_color = trans_util.AddColor(pc_in_image, img, calib)
         # print(pc_with_color[:10])
         # print(pc_in_box3d)
         for loop in range(len(pc_in_box3d_inds)):
@@ -417,8 +417,8 @@ class Ui_MainWindow(object):
             else:
                 pc_in_box3d_inds[loop] = True
         # 点群の色の設定
-        # color = np.ones_like(pc_in_image)
-        # color[:, :3] = pc_in_image[:, :3]
+        color = np.ones_like(pc_in_image)
+        color[:, :3] = pc_in_image[:, :3]
         # 距離によって色を変化
         # dist = np.zeros((np.shape(pc_in_image)[0]))
         # for loop in range(3):
@@ -433,15 +433,17 @@ class Ui_MainWindow(object):
         # color[:, 1] = dist
         # color[:, 2] = one_line-dist
         # 反射強度によって色を変化
-        # intensity = pc_in_image[:, 3]
-        # one_line = np.ones_like(intensity)
+        intensity = pc_in_image[:, 3]
+        one_line = np.ones_like(intensity)
+        color[:, 0] = 0
+        color[:, 1] = 0
         # color[:, 0] = intensity
         # color[:, 1] = intensity
-        # color[:, 2] = one_line
-        color = np.zeros((np.shape(pc_with_color[pc_in_frustum_inds])[0], 4))
-        color[:, 0] = pc_with_color[pc_in_frustum_inds, 6]/255
-        color[:, 1] = pc_with_color[pc_in_frustum_inds, 5]/255
-        color[:, 2] = pc_with_color[pc_in_frustum_inds, 4]/255
+        color[:, 2] = one_line
+        # color = np.zeros((np.shape(pc_with_color[pc_in_frustum_inds])[0], 4))
+        # color[:, 0] = pc_with_color[pc_in_frustum_inds, 6]/255
+        # color[:, 1] = pc_with_color[pc_in_frustum_inds, 5]/255
+        # color[:, 2] = pc_with_color[pc_in_frustum_inds, 4]/255
         # color[:, 3] = pc_with_color[pc_in_frustum_inds, 3]
         i = 0
         for loop in range(len(pc_in_frustum_inds)):
@@ -471,8 +473,10 @@ class Ui_MainWindow(object):
         gl_lines = gl.GLLinePlotItem(pos=self.line_scale, color=(1, 1, 1, 1), width=5, antialias=True, mode='lines')
         self.ViewPointCloud.addItem(gl_lines)
         # 点群の描画
-        gl_pc_in_image = gl.GLScatterPlotItem(pos=pc_with_color[pc_in_frustum_inds, :3], color=color, size=5, pxMode=True)
+        gl_pc_in_image = gl.GLScatterPlotItem(pos=pc_in_image[pc_in_frustum_inds, :3], color=color, size=size, pxMode=True)
         self.ViewPointCloud.addItem(gl_pc_in_image)
+        # gl_pc_in_image = gl.GLScatterPlotItem(pos=pc_with_color[pc_in_frustum_inds, :3], color=color, size=5, pxMode=True)
+        # self.ViewPointCloud.addItem(gl_pc_in_image)
         gl_pc_in_frustum = gl.GLScatterPlotItem(pos=pc_in_frustum[pc_in_box3d_inds, :3], color=(1, 1, 1, 1), size=size, pxMode=True)
         self.ViewPointCloud.addItem(gl_pc_in_frustum)
         gl_pc_in_box3d = gl.GLScatterPlotItem(pos=pc_in_box3d[:, :3], color=ObjectColor(self.type, mode="3d"), size=size, pxMode=True)
