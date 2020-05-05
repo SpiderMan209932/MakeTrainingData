@@ -40,14 +40,14 @@ class FileOperation(object):
         self.image_dir_name         = os.path.dirname(self.image_file_name)
         self.data_dir_name          = os.path.dirname(self.image_dir_name)
         self.pointcloud_dir_name    = os.path.join(self.data_dir_name, 'PointCloud')
-        self.label2d_dir_name       = os.path.join(self.data_dir_name, 'label2d')
+        # self.label2d_dir_name       = os.path.join(self.data_dir_name, 'label2d')
         self.label_dir_name         = os.path.join(self.data_dir_name, 'label')
         self.calib_dir_name         = os.path.join(self.data_dir_name, 'calib')
         # ディレクトリ内のファイルのリストの取得
         self.image_file_list        = sorted(glob.glob(os.path.join(self.image_dir_name, '*')))
         self.pointcloud_file_list   = sorted(glob.glob(os.path.join(self.pointcloud_dir_name, '*')))
         self.label_file_list        = sorted(glob.glob(os.path.join(self.label_dir_name, '*')))
-        self.label2d_file_list      = sorted(glob.glob(os.path.join(self.label2d_dir_name, '*')))
+        # self.label2d_file_list      = sorted(glob.glob(os.path.join(self.label2d_dir_name, '*')))
         for i in range(len(self.image_file_list)):
             if os.path.basename(self.image_file_name)==os.path.basename(self.image_file_list[i]):
                 self.image_file_idx = i
@@ -55,7 +55,7 @@ class FileOperation(object):
         self.image_number_list = [i for i in range(len(self.image_file_list))]
         self.pointcloud_number_list = [i for i in range(len(self.pointcloud_file_list))]
         self.label_number_list = [i for i in range(len(self.label_file_list))]
-        self.label2d_number_list = [i for i in range(len(self.label2d_file_list))]
+        # self.label2d_number_list = [i for i in range(len(self.label2d_file_list))]
         for loop in range(len(self.image_file_list)):
             _file = os.path.splitext(os.path.basename(self.image_file_list[loop]))[0]
             self.image_number_list[loop] = int(_file[-12:])
@@ -65,9 +65,9 @@ class FileOperation(object):
         for loop in range(len(self.label_file_list)):
             _file = os.path.splitext(self.label_file_list[loop])[0]
             self.label_number_list[loop] = int(_file[-12:])
-        for loop in range(len(self.label2d_file_list)):
-            _file = os.path.splitext(self.label2d_file_list[loop])[0]
-            self.label2d_number_list[loop] = int(_file[-12:])   
+        # for loop in range(len(self.label2d_file_list)):
+        #     _file = os.path.splitext(self.label2d_file_list[loop])[0]
+        #     self.label2d_number_list[loop] = int(_file[-12:])   
         # 各ファイル名の取得
         # self.base_file_name         = os.path.splitext(os.path.basename(self.image_file_name))[0]
         # self.base_file_number       = int(self.base_file_name)
@@ -83,13 +83,14 @@ class FileOperation(object):
                 self.pointcloud_file_idx  = loop
         for loop in range(len(self.label_number_list)):
             if self.label_number_list[loop]==self.pointcloud_number_list[self.pointcloud_file_idx]:
-                self. label_file_name = self.label_file_list[loop]
+                self.label_file_name = self.label_file_list[loop]
                 break
-        for loop in range(len(self.label2d_number_list)):
-            if self.label2d_number_list[loop]==self.pointcloud_number_list[self.pointcloud_file_idx]:
-                self. label2d_file_name = self.label2d_file_list[loop]
-                break
-        self.calib_file_name        = os.path.join(self.calib_dir_name, 'calib.txt')
+        # for loop in range(len(self.label2d_number_list)):
+        #     if self.label2d_number_list[loop]==self.pointcloud_number_list[self.pointcloud_file_idx]:
+        #         self. label2d_file_name = self.label2d_file_list[loop]
+        #         break
+        # labelとcalibのファイル名は一致
+        self.calib_file_name        = os.path.join(self.calib_dir_name, os.path.basename(self.label_file_name))
         self.calib                  = trans_util.Calibration(self.calib_file_name)
         self.new_label_dir_name     = os.path.join(self.data_dir_name, 'new_label')
         self.new_label_file_name    = os.path.join(self.new_label_dir_name, self.label_file_name)
@@ -108,15 +109,24 @@ class FileOperation(object):
         objects = [LabelObject(data) for data in lines]
         return objects
 
-    def read_label2d_file(self, frustum_number, objects):
+    def read_label2d_file(self, frustum_number, objects, calib=None, box3d=None):
         if objects[frustum_number].box2d[0]!=-100:
             num = len(objects)
             pts_box2d = objects[frustum_number].box2d
         else:
-            lines           = [line.rstrip() for line in open(self.label2d_file_name)]
-            list_pts_box2d  = [line.split() for line in lines]
-            num             = len(list_pts_box2d)
-            pts_box2d       = [float(pts) for pts in list_pts_box2d[frustum_number]]
+            # ３Dボックスを画像に投影し、２Dボックスを生成
+            _, pts_box3d = trans_util.compute_box_3d(objects[frustum_number], calib.P, box3d)
+            image_pts_box3d = calib.project_velo_to_image(pts_box3d)
+            xmin = np.min(image_pts_box3d[:, 0])
+            xmax = np.max(image_pts_box3d[:, 0])
+            ymin = np.min(image_pts_box3d[:, 1])
+            ymax = np.max(image_pts_box3d[:, 1])
+            pts_box2d = [xmin, ymin, xmax, ymax]
+            num = len(objects)
+            # lines           = [line.rstrip() for line in open(self.label2d_file_name)]
+            # list_pts_box2d  = [line.split() for line in lines]
+            # num             = len(list_pts_box2d)
+            # pts_box2d       = [float(pts) for pts in list_pts_box2d[frustum_number]]
         return pts_box2d, num
     
     def read_pc_file(self):
