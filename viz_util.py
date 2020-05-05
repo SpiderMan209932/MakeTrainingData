@@ -7,7 +7,7 @@ Ref: https://github.com/hengck23/didi-udacity-2017/blob/master/baseline-04/kitti
 '''
 
 import numpy as np
-import mayavi.mlab as mlab
+# import mayavi.mlab as mlab
 import cv2
 from pyqtgraph.Qt import QtCore, QtGui
 import pyqtgraph.opengl as gl
