@@ -99,8 +99,8 @@ class FileOperation(object):
         # labelとcalibのファイル名は一致
         self.calib_file_name        = os.path.join(self.calib_dir_name, os.path.basename(self.label_file_name))
         self.calib                  = trans_util.Calibration(self.calib_file_name)
-        self.new_label_dir_name     = os.path.join(self.data_dir_name, 'new_label')
-        self.new_label_file_name    = os.path.join(self.new_label_dir_name, self.label_file_name)
+        self.new_label_dir_name     = os.path.join(self.data_dir_name, 'new_test_label')
+        self.new_label_file_name    = os.path.join(self.new_label_dir_name, os.path.basename(self.label_file_name))
         # self.pointcloud_file_name   = os.path.join(self.pointcloud_dir_name, self.base_file_name+ '.bin')
         # self.label2d_file_name      = os.path.join(self.label2d_dir_name, self.base_file_name+'.txt')
         # self.label_file_name        = os.path.join(self.label_dir_name, self.base_file_name+'.txt')
@@ -164,7 +164,10 @@ class FileOperation(object):
             f.write('%s\n'%log)
         return True
 
-    def make_save_dir(self):
+    def make_save_dir(self, test):
+        if test==False:
+            self.new_label_dir_name = os.path.join(self.data_dir_name, 'new_training_label')
+            self.new_label_file_name    = os.path.join(self.new_label_dir_name, os.path.basename(self.label_file_name))
         if os.path.exists(self.new_label_dir_name)==False:
             os.mkdir(self.new_label_dir_name)        
         return True
