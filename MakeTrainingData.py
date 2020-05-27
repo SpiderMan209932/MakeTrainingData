@@ -82,6 +82,7 @@ class Ui_MainWindow(object):
         self.save_log = None
         self.line_scale = np.zeros((60, 3))
         self.log_file_name = date
+        self.test_mode = False
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -135,18 +136,18 @@ class Ui_MainWindow(object):
         self.TextBox2DYMax.setGeometry(QtCore.QRect(10, 415, 41, 31))
         self.TextBox2DYMax.setAlignment(QtCore.Qt.AlignCenter)
         self.TextBox2DYMax.setObjectName("TextBox2DYMax")
-        self.TextViewX = QtWidgets.QLabel(self.centralwidget)
-        self.TextViewX.setGeometry(QtCore.QRect(10, 465, 41, 31))
-        self.TextViewX.setAlignment(QtCore.Qt.AlignCenter)
-        self.TextViewX.setObjectName("TextViewX")
-        self.TextViewY = QtWidgets.QLabel(self.centralwidget)
-        self.TextViewY.setGeometry(QtCore.QRect(10, 500, 41, 31))
-        self.TextViewY.setAlignment(QtCore.Qt.AlignCenter)
-        self.TextViewY.setObjectName("TextViewY")
-        self.TextViewZ = QtWidgets.QLabel(self.centralwidget)
-        self.TextViewZ.setGeometry(QtCore.QRect(10, 535, 41, 31))
-        self.TextViewZ.setAlignment(QtCore.Qt.AlignCenter)
-        self.TextViewZ.setObjectName("TextViewZ")
+        self.TextCheckBoxTest = QtWidgets.QLabel(self.centralwidget)
+        self.TextCheckBoxTest.setGeometry(QtCore.QRect(10, 505, 41, 31))
+        self.TextCheckBoxTest.setAlignment(QtCore.Qt.AlignCenter)
+        self.TextCheckBoxTest.setObjectName("CheckBoxTest")
+        # self.TextViewY = QtWidgets.QLabel(self.centralwidget)
+        # self.TextViewY.setGeometry(QtCore.QRect(10, 500, 41, 31))
+        # self.TextViewY.setAlignment(QtCore.Qt.AlignCenter)
+        # self.TextViewY.setObjectName("TextViewY")
+        # self.TextViewZ = QtWidgets.QLabel(self.centralwidget)
+        # self.TextViewZ.setGeometry(QtCore.QRect(10, 535, 41, 31))
+        # self.TextViewZ.setAlignment(QtCore.Qt.AlignCenter)
+        # self.TextViewZ.setObjectName("TextViewZ")
 
         # H
         self.SizeHeight = QtWidgets.QDoubleSpinBox(self.centralwidget)
@@ -225,27 +226,33 @@ class Ui_MainWindow(object):
         self.Box2DYMax.setGeometry(QtCore.QRect(51, 415, 211, 31))
         self.Box2DYMax.setObjectName("Box2DYMax")
         self.Box2DYMax.valueChanged.connect(self.GetValue)
-        # viewX
-        self.ViewX = QtWidgets.QDoubleSpinBox(self.centralwidget)
-        self.ViewX.setMaximum(1000)
-        self.ViewX.setMinimum(-1000)
-        self.ViewX.setGeometry(QtCore.QRect(51, 465, 211, 31))
-        self.ViewX.setObjectName("ViewX")
-        self.ViewX.valueChanged.connect(self.GetValue)
-        # viewY
-        self.ViewY = QtWidgets.QDoubleSpinBox(self.centralwidget)
-        self.ViewY.setMaximum(1000)
-        self.ViewY.setMinimum(-1000)
-        self.ViewY.setGeometry(QtCore.QRect(51, 500, 211, 31))
-        self.ViewY.setObjectName("ViewY")
-        self.ViewY.valueChanged.connect(self.GetValue)
-        #viewZ
-        self.ViewZ = QtWidgets.QDoubleSpinBox(self.centralwidget)
-        self.ViewZ.setMaximum(1000)
-        self.ViewZ.setMinimum(-1000)
-        self.ViewZ.setGeometry(QtCore.QRect(51, 535, 211, 31))
-        self.ViewZ.setObjectName("ViewZ")
-        self.ViewZ.valueChanged.connect(self.GetValue)
+        # # viewX
+        # self.ViewX = QtWidgets.QDoubleSpinBox(self.centralwidget)
+        # self.ViewX.setMaximum(1000)
+        # self.ViewX.setMinimum(-1000)
+        # self.ViewX.setGeometry(QtCore.QRect(51, 465, 211, 31))
+        # self.ViewX.setObjectName("ViewX")
+        # self.ViewX.valueChanged.connect(self.GetValue)
+        # # viewY
+        # self.ViewY = QtWidgets.QDoubleSpinBox(self.centralwidget)
+        # self.ViewY.setMaximum(1000)
+        # self.ViewY.setMinimum(-1000)
+        # self.ViewY.setGeometry(QtCore.QRect(51, 500, 211, 31))
+        # self.ViewY.setObjectName("ViewY")
+        # self.ViewY.valueChanged.connect(self.GetValue)
+        # #viewZ
+        # self.ViewZ = QtWidgets.QDoubleSpinBox(self.centralwidget)
+        # self.ViewZ.setMaximum(1000)
+        # self.ViewZ.setMinimum(-1000)
+        # self.ViewZ.setGeometry(QtCore.QRect(51, 535, 211, 31))
+        # self.ViewZ.setObjectName("ViewZ")
+        # self.ViewZ.valueChanged.connect(self.GetValue)
+        # test check box
+        self.CheckBoxTest = QtWidgets.QCheckBox(self.centralwidget)
+        self.CheckBoxTest.setGeometry(QtCore.QRect(100, 505, 211, 31))
+        self.CheckBoxTest.setObjectName("CheckBoxTest")
+        self.CheckBoxTest.clicked.connect(self.ChangeSaveMode)
+
        
         # クラス
         self.ObjectClass = QtWidgets.QComboBox(self.centralwidget)
@@ -346,9 +353,9 @@ class Ui_MainWindow(object):
         self.TextBox2DXMax.setText(_translate("MainWindow", "Xmax"))
         self.TextBox2DYMin.setText(_translate("MainWindow", "Ymin"))
         self.TextBox2DYMax.setText(_translate("MainWindow", "Ymax"))
-        self.TextViewX.setText(_translate("MainWindow", "viewX"))
-        self.TextViewY.setText(_translate("MainWindow", "viewY"))
-        self.TextViewZ.setText(_translate("MainWindow", "viewZ"))
+        self.TextCheckBoxTest.setText(_translate("MainWindow", "Test"))
+        # self.TextViewY.setText(_translate("MainWindow", "viewY"))
+        # self.TextViewZ.setText(_translate("MainWindow", "viewZ"))
         self.ObjectClass.setItemText(0, _translate("MainWindow", "Class"))
         self.ObjectClass.setItemText(1, _translate("MainWindow", "Car"))
         self.ObjectClass.setItemText(2, _translate("MainWindow", "Pedestrian"))
@@ -524,7 +531,7 @@ class Ui_MainWindow(object):
 
     def SaveBoxLabel(self):
         # new_labelディレクトリの生成
-        self.FileOp.make_save_dir()
+        self.FileOp.make_save_dir(test=self.test_mode)
         # save_labelの作成
         self.MakeSaveLabel()
         # frustum_numberが一致したら保存しない
@@ -537,7 +544,7 @@ class Ui_MainWindow(object):
             if _dialog==QMessageBox.No:
                 return True
         # new_labelへlabelを保存
-        print(self.log_file_name)
+        # print(self.log_file_name)
         if self.FileOp.write_save_label(self.save_label, self.overwrite)==False:
             save_dialog = QMessageBox.information(None, "Caution", ("すでにファイルが存在します\n" + "上書きしますか?"), QMessageBox.No, QMessageBox.Yes)
             if save_dialog == QMessageBox.Yes:
@@ -667,9 +674,9 @@ class Ui_MainWindow(object):
         self.ymin = self.Box2DYMin.value()
         self.xmax = self.Box2DXMax.value()
         self.ymax = self.Box2DYMax.value()
-        self.viewx = self.ViewX.value()
-        self.viewy = self.ViewY.value()
-        self.viewz = self.ViewZ.value()
+        # self.viewx = self.ViewX.value()
+        # self.viewy = self.ViewY.value()
+        # self.viewz = self.ViewZ.value()
         self.box3d = [self.l, self.w, self.h, self.yaw, self.x, self.y, self.z]
         # 画像の表示
         img , pts_box2d = self.ShowImage(update=True)
@@ -691,9 +698,9 @@ class Ui_MainWindow(object):
         self.Box2DYMin.blockSignals(True)
         self.Box2DXMax.blockSignals(True)
         self.Box2DYMax.blockSignals(True)
-        self.ViewX.blockSignals(True)
-        self.ViewY.blockSignals(True)
-        self.ViewZ.blockSignals(True)
+        # self.ViewX.blockSignals(True)
+        # self.ViewY.blockSignals(True)
+        # self.ViewZ.blockSignals(True)
         # 値の更新
         obj = self.objects[self.frustum_number]
         self.type = obj.type
@@ -723,9 +730,9 @@ class Ui_MainWindow(object):
         self.Box2DYMin.setValue(self.ymin)
         self.Box2DXMax.setValue(self.xmax)
         self.Box2DYMax.setValue(self.ymax)
-        self.ViewX.setValue(self.viewx)
-        self.ViewY.setValue(self.viewy)
-        self.ViewZ.setValue(self.viewz)
+        # self.ViewX.setValue(self.viewx)
+        # self.ViewY.setValue(self.viewy)
+        # self.ViewZ.setValue(self.viewz)
         # シグナルの有効化
         self.ObjectClass.blockSignals(False)
         self.SizeHeight.blockSignals(False)
@@ -739,10 +746,14 @@ class Ui_MainWindow(object):
         self.Box2DYMin.blockSignals(False)
         self.Box2DXMax.blockSignals(False)
         self.Box2DYMax.blockSignals(False)
-        self.ViewX.blockSignals(False)
-        self.ViewY.blockSignals(False)
-        self.ViewZ.blockSignals(False)
+        # self.ViewX.blockSignals(False)
+        # self.ViewY.blockSignals(False)
+        # self.ViewZ.blockSignals(False)
         return True
+
+    def ChangeSaveMode(self):
+        self.test_mode = True
+        return True 
 
 if __name__ == "__main__":
     import sys
