@@ -512,7 +512,7 @@ class Ui_MainWindow(object):
     def MakeSaveLabel(self):
         self.save_label = str(self.type) + ' ' + '-1 -10 -10 ' + \
                 str(self.xmin) + ' ' + str(self.ymin) + ' ' + str(self.xmax) + ' ' + str(self.ymax) + ' ' + \
-                    str(self.h) + ' ' + str(self.w) + ' ' + str(self.h) + ' ' + \
+                    str(self.h) + ' ' + str(self.w) + ' ' + str(self.l) + ' ' + \
                         str(self.x) + ' ' + str(self.y) +  ' ' + str(self.z) + ' ' + \
                             str(self.yaw)
         return True
