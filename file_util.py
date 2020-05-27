@@ -85,6 +85,13 @@ class FileOperation(object):
             if self.label_number_list[loop]==self.pointcloud_number_list[self.pointcloud_file_idx]:
                 self.label_file_name = self.label_file_list[loop]
                 break
+            else:
+                self.label_file_name = None
+        if self.label_file_name==None:
+            self.label_file_name = os.path.join(self.label_dir_name, os.path.splitext(os.path.basename(self.pointcloud_file_name))[0])+".txt"
+            with open(self.label_file_name, 'w') as f:
+                label_tmp = 'Misc ' + '-1 -10 -10 ' + '0 0 30 30 ' + '1 1 1 ' + '0 0 0 0\n'
+                f.write(label_tmp)
         # for loop in range(len(self.label2d_number_list)):
         #     if self.label2d_number_list[loop]==self.pointcloud_number_list[self.pointcloud_file_idx]:
         #         self. label2d_file_name = self.label2d_file_list[loop]
