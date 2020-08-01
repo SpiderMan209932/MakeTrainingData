@@ -715,6 +715,7 @@ class Ui_MainWindow(object):
         self.ymin = obj.ymin
         self.xmax = obj.xmax
         self.ymax = obj.ymax
+        self.box3d = [self.l, self.w, self.h, self.yaw, self.x, self.y, self.z]
         self.viewx = obj.t[0]
         self.viewy = obj.t[1]
         self.viewz = obj.t[2]
