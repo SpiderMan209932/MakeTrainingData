@@ -765,21 +765,3 @@ if __name__ == "__main__":
     ui.setupUi(MainWindow)
     MainWindow.show()
     sys.exit(app.exec_())
-
-# 残骸
-# pixmap = QtGui.QPixmap(self.image_file_name[0])
-# self.Image = QtGui.QImage(img)
-# self.Image = QtGui.QImage(self.image_file_name[0])
-# self.ImageView.setPixmap(QtGui.QPixmap.fromImage(self.Image))
-    # View
-# self.PointCloudView = QtOpenGL(self.centralwidget)
-# # self.PointCloudView = QtWidgets.QGraphicsView(self.centralwidget)
-# self.PointCloudView.setGeometry(QtCore.QRect(10, 10, 711, 641))
-# self.PointCloudView.setObjectName("PointCloudView")
-# self.ImageView = QtWidgets.QLabel(self.centralwidget)
-# self.ImageView.setGeometry(QtCore.QRect(730, 290, 531, 361))
-# self.ImageView.setObjectName("ImageView")
-# pixmap = QtGui.QPixmap(self.image_file_name)
-# self.Image = QtGui.QImage()
-# self.ImageView.setPixmap(QtGui.QPixmap.fromImage(self.Image))
-# # view.addItem(self._imageItem)
