@@ -98,7 +98,11 @@ class FileOperation(object):
         #         break
         # labelとcalibのファイル名は一致
         self.calib_file_name        = os.path.join(self.calib_dir_name, os.path.basename(self.label_file_name))
-        self.calib                  = trans_util.Calibration(self.calib_file_name)
+        if os.path.exists(self.calib_file_name)==False:
+            self.calib_file_name    = None
+            self.calib              = None
+        else:
+            self.calib              = trans_util.Calibration(self.calib_file_name)
         self.new_label_dir_name     = os.path.join(self.data_dir_name, 'new_test_label')
         self.new_label_file_name    = os.path.join(self.new_label_dir_name, os.path.basename(self.label_file_name))
         # self.pointcloud_file_name   = os.path.join(self.pointcloud_dir_name, self.base_file_name+ '.bin')
@@ -122,18 +126,17 @@ class FileOperation(object):
             pts_box2d = objects[frustum_number].box2d
         else:
             # ３Dボックスを画像に投影し、２Dボックスを生成
-            _, pts_box3d = trans_util.compute_box_3d(objects[frustum_number], calib.P, box3d)
-            image_pts_box3d = calib.project_velo_to_image(pts_box3d)
-            xmin = np.min(image_pts_box3d[:, 0])
-            xmax = np.max(image_pts_box3d[:, 0])
-            ymin = np.min(image_pts_box3d[:, 1])
-            ymax = np.max(image_pts_box3d[:, 1])
-            pts_box2d = [xmin, ymin, xmax, ymax]
             num = len(objects)
-            # lines           = [line.rstrip() for line in open(self.label2d_file_name)]
-            # list_pts_box2d  = [line.split() for line in lines]
-            # num             = len(list_pts_box2d)
-            # pts_box2d       = [float(pts) for pts in list_pts_box2d[frustum_number]]
+            if calib==None:
+                pts_box2d = [0, 0, 100, 100]
+            else:
+                _, pts_box3d = trans_util.compute_box_3d(objects[frustum_number], calib.P, box3d)
+                image_pts_box3d = calib.project_velo_to_image(pts_box3d)
+                xmin = np.min(image_pts_box3d[:, 0])
+                xmax = np.max(image_pts_box3d[:, 0])
+                ymin = np.min(image_pts_box3d[:, 1])
+                ymax = np.max(image_pts_box3d[:, 1])
+                pts_box2d = [xmin, ymin, xmax, ymax]
         return pts_box2d, num
     
     def read_pc_file(self):
@@ -142,11 +145,14 @@ class FileOperation(object):
         return pc
 
     def get_pc_in_image(self, pc, image_width, image_height):
-        pc_rect     = self.calib.project_velo_to_rect(pc[:, :3])
-        pc2d        = self.calib.project_velo_to_image(pc[:, :3])
-        fov_inds    = (pc2d[:, 0] > 0) & (pc2d[:, 1] > 0) &\
-            (pc2d[:, 0] < image_width) & (pc2d[:, 1] < image_height) & (pc_rect[:, 2]>0)
-        pc_in_image = pc[fov_inds, :]
+        if self.calib!=None:
+            pc_rect     = self.calib.project_velo_to_rect(pc[:, :3])
+            pc2d        = self.calib.project_velo_to_image(pc[:, :3])
+            fov_inds    = (pc2d[:, 0] > 0) & (pc2d[:, 1] > 0) &\
+                (pc2d[:, 0] < image_width) & (pc2d[:, 1] < image_height) & (pc_rect[:, 2]>0)
+            pc_in_image = pc[fov_inds, :]
+        else:
+            pc_in_image = pc
         return pc_in_image
 
     def get_frustum(self, pts_box2d):
